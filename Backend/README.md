@@ -1,6 +1,6 @@
 # API Mock Data Backend
 
-Backend service for generating rule-driven mock API data.
+Backend service for generating rule-based mock API data.
 
 ## Table of Contents
 
@@ -118,6 +118,8 @@ Server runs at: `http://localhost:5000`
 
 ## Testing
 
+**TESTS GENERATOR FUNCTIONS**
+
 ```bash
 cd Backend
 npm test -- --run
@@ -128,6 +130,7 @@ Includes unit tests:
 - `createDynamicUrl.test.ts`
 - `dataGenerator.test.ts`
 - `urlCreator.test.ts`
+- `apiKeyGenerator.tets.ts`
 
 ## Validation
 
