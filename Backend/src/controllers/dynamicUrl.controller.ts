@@ -1,45 +1,80 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
+validateDynamicApi;
 import { validateDynamicApi } from "../validation/dynamicUrlValidation";
 import getDynamicsUrlDataService from "../service/getDynamicsUrlData.service";
 
-async function getDynamicUrlData(req: Request, res: Response) {
+function getUserId(req: Request): number {
   const userId = Number((req as any).user?.id);
-  if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
+  if (!userId) {
+    const error = new Error("Unauthorized");
+    (error as any).statusCode = 401;
+    throw error;
+  }
+
+  return userId;
+}
+
+function extractDynamicUrlParams(req: Request): {
+  apiKey: string;
+  endpoint: string;
+} {
   const apiKeyParam = req.params.apiKey;
   const endpointEncoded = req.params.endpoint;
 
   if (!apiKeyParam || !endpointEncoded) {
-    return res.status(400).json({ message: "Invalid API key or endpoint" });
+    const error = new Error("Invalid API key or endpoint");
+    (error as any).statusCode = 400;
+    throw error;
   }
 
   let endpointParam = endpointEncoded;
+
+  endpointParam = decodeURIComponent(endpointEncoded as string);
+
+  return {
+    apiKey: apiKeyParam as string,
+    endpoint: endpointParam,
+  };
+}
+
+function normalizeEndpoint(endpoint: string): string {
+  if (!endpoint.startsWith("/")) {
+    return `/${endpoint}`;
+  }
+
+  return endpoint;
+}
+
+async function getDynamicUrlData(req: Request, res: Response) {
   try {
-    endpointParam = decodeURIComponent(endpointParam as string);
-  } catch {}
+    const userId = getUserId(req);
 
-  const params = { apiKey: apiKeyParam, endpoint: endpointParam };
+    const rawParams = extractDynamicUrlParams(req);
 
-  const { apiKey, endpoint } = validateDynamicApi(params);
+    const { apiKey, endpoint } = validateDynamicApi(rawParams);
 
-  let normalizedEndpoint = endpoint;
-  if (!normalizedEndpoint.startsWith("/")) {
-    normalizedEndpoint = "/" + normalizedEndpoint;
+    const normalizedEndpoint = normalizeEndpoint(endpoint);
+
+    const mockData = await getDynamicsUrlDataService(
+      userId,
+      apiKey,
+      normalizedEndpoint,
+    );
+
+    if (!mockData) {
+      return res
+        .status(404)
+        .json({ message: "No mock data mapping for this endpoint/user" });
+    }
+
+    return res.status(200).json(mockData);
+  } catch (error: any) {
+    const statusCode = error?.statusCode || 500;
+    const message = error?.message || "Internal server error";
+
+    return res.status(statusCode).json({ message });
   }
-
-  const mockData = await getDynamicsUrlDataService(
-    userId,
-    apiKey,
-    normalizedEndpoint,
-  );
-
-  if (!mockData) {
-    return res
-      .status(404)
-      .json({ message: "No mock data mapping for this endpoint/user" });
-  }
-
-  res.status(200).json(mockData);
 }
 
 export { getDynamicUrlData };

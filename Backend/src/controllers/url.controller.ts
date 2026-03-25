@@ -2,17 +2,14 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import createDynamicUrlService from "../service/createDynamicUrl";
 import getDynamicUrlService from "../service/getDynamicUrl";
-
-const createUrlSchema = z.object({
-  ruleId: z.preprocess((val) => Number(val), z.number().int().positive()),
-});
+import { createUrlSchema } from "../validation/urlValidation";
 
 async function createUrlRoute(req: Request, res: Response) {
   const validation = createUrlSchema.safeParse(req.params);
   if (!validation.success) {
     return res.status(400).json({
       message: "Invalid rule ID",
-      errors: validation.error.format(),
+      errors: z.treeifyError(validation.error),
     });
   }
 
