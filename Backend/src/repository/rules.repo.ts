@@ -25,9 +25,7 @@ async function createRule(
   if (url_id !== undefined) {
     values.url_id = url_id;
   }
-  console.log("a");
   const rule = await db.insert(rulesTable).values(values).returning();
-  console.log(rule);
   return rule;
 }
 

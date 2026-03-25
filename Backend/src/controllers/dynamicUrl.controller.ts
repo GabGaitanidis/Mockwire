@@ -1,20 +1,6 @@
 import type { Request, Response } from "express";
-validateDynamicApi;
 import { validateDynamicApi } from "../validation/dynamicUrlValidation";
-import getDynamicsUrlDataService from "../service/getDynamicsUrlData.service";
-import normalizeEndpoint from "../service/normalizeEndpoint";
-
-function getUserId(req: Request): number {
-  const userId = Number(req.user?.id);
-
-  if (!userId) {
-    const error = new Error("Unauthorized");
-    (error as any).statusCode = 401;
-    throw error;
-  }
-
-  return userId;
-}
+import getDynamicsUrlDataService from "../service/getDynamicsUrlDataService";
 
 function extractDynamicUrlParams(req: Request): {
   apiKey: string;
@@ -40,34 +26,19 @@ function extractDynamicUrlParams(req: Request): {
 }
 
 async function getDynamicUrlData(req: Request, res: Response) {
-  try {
-    const userId = getUserId(req);
+  const userId = Number(req.user?.id);
 
-    const rawParams = extractDynamicUrlParams(req);
+  const rawParams = extractDynamicUrlParams(req);
 
-    const { apiKey, endpoint } = validateDynamicApi(rawParams);
+  const { apiKey, endpoint } = validateDynamicApi(rawParams);
 
-    const normalizedEndpoint = normalizeEndpoint(endpoint);
+  const mockData = await getDynamicsUrlDataService(userId, apiKey, endpoint);
 
-    const mockData = await getDynamicsUrlDataService(
-      userId,
-      apiKey,
-      normalizedEndpoint,
-    );
-
-    if (!mockData) {
-      return res
-        .status(404)
-        .json({ message: "No mock data mapping for this endpoint/user" });
-    }
-
-    return res.status(200).json(mockData);
-  } catch (error: any) {
-    const statusCode = error?.statusCode || 500;
-    const message = error?.message || "Internal server error";
-
-    return res.status(statusCode).json({ message });
+  if (!mockData) {
+    return res.status(404).json({ message: "No data for this" });
   }
+
+  return res.status(200).json(mockData);
 }
 
 export { getDynamicUrlData };

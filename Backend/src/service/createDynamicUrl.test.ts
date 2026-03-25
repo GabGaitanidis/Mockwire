@@ -19,7 +19,7 @@ vi.mock("../repository/url.repo", () => ({
     .mockResolvedValue({ id: 123, url: "http://test-url" }),
 }));
 
-import createDynamicUrlService from "./createDynamicUrl";
+import createDynamicUrlService from "./createDynamicUrlService";
 import { getEndpoint, bindUrlToRule } from "../repository/rules.repo";
 import { getUsersAPIKey } from "../repository/user.repo";
 import urlGenerator from "../data_generation/urlCreator";
@@ -27,7 +27,7 @@ import { createDynamicUrl } from "../repository/url.repo";
 
 describe("createDynamicUrlService", () => {
   test("resolves URL creation using rulesId and userId", async () => {
-    const output = await createDynamicUrlService(5, 99);
+    const output = await createDynamicUrlService(5, { ruleId: 99 });
 
     expect(getUsersAPIKey).toHaveBeenCalledWith(5);
     expect(getEndpoint).toHaveBeenCalledWith(5, 99);

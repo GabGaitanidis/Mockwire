@@ -5,8 +5,9 @@ import {
   getRulesController,
   createRulesController,
 } from "../controllers/rules.controller";
+import checkUserId from "../middlewares/checkUserId";
 const ruleRouter = express.Router();
 
-ruleRouter.get("/", requireAuth, getRulesController);
-ruleRouter.post("/", requireAuth, createRulesController);
+ruleRouter.get("/", requireAuth, checkUserId, getRulesController);
+ruleRouter.post("/", requireAuth, checkUserId, createRulesController);
 export default ruleRouter;
