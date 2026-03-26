@@ -1,23 +1,31 @@
 import { Request, Response, NextFunction } from "express";
-
-interface ApiError extends Error {
-  status?: number;
-}
+import { AppError } from "../errors/AppError";
 
 export function notFoundHandler(_req: Request, res: Response) {
   return res.status(404).json({ message: "Route not found" });
 }
 
 export function errorHandler(
-  err: ApiError,
-  req: Request,
+  err: unknown,
+  _req: Request,
   res: Response,
-  next: NextFunction,
+  _next: NextFunction,
 ) {
-  const status = err.status ?? 500;
-  const message = err.message || "Internal Server Error";
-
   console.error("ErrorHandler:", err);
 
-  return res.status(status).json({ message });
+  if (err instanceof AppError) {
+    return res.status(err.status).json({
+      message: err.message,
+    });
+  }
+
+  if (err instanceof Error) {
+    return res.status(500).json({
+      message: err.message || "Internal Server Error",
+    });
+  }
+
+  return res.status(500).json({
+    message: "Internal Server Error",
+  });
 }
