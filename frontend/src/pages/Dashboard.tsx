@@ -156,7 +156,8 @@ const Dashboard: FC = () => {
       const testUrl = generatedUrl
         .replace("http://localhost:5000", "/api")
         .replace("http://localhost:3001", "/api")
-        .replace("https://localhost:3001", "/api");
+        .replace("https://localhost:3001", "/api")
+        .replace("https://api-generator-7lxt.onrender.com", "/api");
 
       const response = await axios.get(testUrl);
       setTestResponse({
