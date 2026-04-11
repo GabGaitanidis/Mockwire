@@ -1,10 +1,36 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect, FC } from "react";
+import axios from "../utils/axiosInstance";
 
-const Dashboard = () => {
-  const [rules, setRules] = useState([]);
-  const [urls, setUrls] = useState([]);
-  const [formData, setFormData] = useState({
+interface Rule {
+  id: number;
+  endpoint: string;
+  latency: number;
+  errorRate: number;
+  dataSchema: Record<string, string>;
+}
+
+interface URL {
+  url: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  api_key: string;
+}
+
+interface FormData {
+  endpoint: string;
+  dataSchema: string;
+  latency: number;
+  errorRate: number;
+}
+
+const Dashboard: FC = () => {
+  const [rules, setRules] = useState<Rule[]>([]);
+  const [urls, setUrls] = useState<URL[]>([]);
+  const [formData, setFormData] = useState<FormData>({
     endpoint: "",
     dataSchema: "",
     latency: 0,
@@ -12,7 +38,7 @@ const Dashboard = () => {
   });
   const [selectedRuleId, setSelectedRuleId] = useState("");
   const [generatedUrl, setGeneratedUrl] = useState("");
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -42,12 +68,18 @@ const Dashboard = () => {
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData({
+      ...formData,
+      [name]:
+        name === "latency" || name === "errorRate" ? Number(value) : value,
+    });
   };
 
-  const handleSubmitRule = async (e) => {
+  const handleSubmitRule = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) {
       setError("Please login first");
@@ -73,7 +105,6 @@ const Dashboard = () => {
       setError("Failed to generate URL");
     }
   };
-
   const handleTestUrl = async () => {
     if (!generatedUrl) return;
     try {
@@ -81,7 +112,7 @@ const Dashboard = () => {
         generatedUrl.replace("http://localhost:5000", "/api"),
       );
       alert("Response: " + JSON.stringify(response.data, null, 2));
-    } catch (err) {
+    } catch (err: any) {
       alert("Error: " + err.response?.data?.message || "Request failed");
     }
   };

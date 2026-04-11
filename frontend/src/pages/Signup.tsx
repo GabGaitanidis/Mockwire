@@ -1,9 +1,15 @@
-import { useState } from "react";
+import { useState, FC } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 
-const Signup = () => {
-  const [formData, setFormData] = useState({
+interface SignupFormData {
+  name: string;
+  email: string;
+  password: string;
+}
+
+const Signup: FC = () => {
+  const [formData, setFormData] = useState<SignupFormData>({
     name: "",
     email: "",
     password: "",
@@ -11,11 +17,11 @@ const Signup = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const response = await axios.post("/api/auth/register", formData);
