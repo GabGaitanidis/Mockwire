@@ -1,17 +1,21 @@
 export default function pickRandomStatusCode(
-  statusCodes: Record<string, number>,
-): number {
+  statusCodes: Record<string, { weight: number; message: string }>,
+): { code: number; message: string } {
   const random = Math.random() * 100;
   let cumulativeWeight = 0;
 
-  for (const [code, weight] of Object.entries(statusCodes)) {
-    cumulativeWeight += weight;
+  for (const [code, data] of Object.entries(statusCodes)) {
+    cumulativeWeight += data.weight;
 
     if (random <= cumulativeWeight) {
-      return Number(code);
+      return { code: Number(code), message: data.message };
     }
   }
 
-  return Number(Object.keys(statusCodes)[0]);
+  const firstKey = Object.keys(statusCodes)[0];
+  return {
+    code: Number(firstKey),
+    message: statusCodes[firstKey].message,
+  };
 }
 // Weighted Random Selection Algorithm

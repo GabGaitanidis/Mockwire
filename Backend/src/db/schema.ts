@@ -28,9 +28,9 @@ export const rulesTable = pgTable("rules", {
   latency: integer().default(0).notNull(),
   errorRate: integer().default(0).notNull(),
   statusCodes: jsonb("status_codes")
-    .$type<Record<string, number>>()
+    .$type<Record<string, { weight: number; message: string }>>()
     .notNull()
-    .default({ "200": 100 }),
+    .default({ "200": { weight: 100, message: "OK" } }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   api_key: varchar({ length: 255 }).notNull(),
 });

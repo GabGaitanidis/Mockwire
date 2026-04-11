@@ -7,7 +7,7 @@ interface Rule {
   latency: number;
   errorRate: number;
   dataSchema: Record<string, string>;
-  statusCodes?: Record<string, number>;
+  statusCodes?: Record<string, { weight: number; message: string }>;
 }
 
 interface URL {
@@ -29,11 +29,12 @@ interface FormData {
   dataSchema: string;
   latency: number;
   errorRate: number;
-  statusCodes: Record<string, number>;
+  statusCodes: Record<string, { weight: number; message: string }>;
 }
 
 interface TestResponse {
   statusCode?: number;
+  message?: string;
   data: any;
   error: string | null;
 }
@@ -46,11 +47,12 @@ const Dashboard: FC = () => {
     dataSchema: "",
     latency: 0,
     errorRate: 0,
-    statusCodes: { "200": 100 },
+    statusCodes: { "200": { weight: 100, message: "OK" } },
   });
   const [statusCodeInput, setStatusCodeInput] = useState({
     code: "200",
     weight: "100",
+    message: "OK",
   });
   const [selectedRuleId, setSelectedRuleId] = useState("");
   const [generatedUrl, setGeneratedUrl] = useState("");
@@ -109,7 +111,7 @@ const Dashboard: FC = () => {
     try {
       const dataSchema = JSON.parse(formData.dataSchema);
       const totalWeight = Object.values(formData.statusCodes).reduce(
-        (a, b) => a + b,
+        (a, b) => a + b.weight,
         0,
       );
       if (totalWeight !== 100) {
@@ -124,9 +126,9 @@ const Dashboard: FC = () => {
         dataSchema: "",
         latency: 0,
         errorRate: 0,
-        statusCodes: { "200": 100 },
+        statusCodes: { "200": { weight: 100, message: "OK" } },
       });
-      setStatusCodeInput({ code: "200", weight: "100" });
+      setStatusCodeInput({ code: "200", weight: "100", message: "OK" });
     } catch (err) {
       setError("Failed to create rule");
     }
@@ -153,7 +155,8 @@ const Dashboard: FC = () => {
       );
       setTestResponse({
         statusCode: response.status,
-        data: response.data,
+        message: response.data.message,
+        data: response.data.data,
         error: null,
       });
     } catch (err: any) {
@@ -170,16 +173,17 @@ const Dashboard: FC = () => {
   const handleAddStatusCode = () => {
     const code = statusCodeInput.code;
     const weight = Number(statusCodeInput.weight);
-    if (!code || weight <= 0 || weight > 100) {
-      setError("Invalid status code or weight");
+    const message = statusCodeInput.message.trim();
+    if (!code || weight <= 0 || weight > 100 || !message) {
+      setError("Invalid status code, weight, or message");
       return;
     }
     setFormData((prev) => ({
       ...prev,
-      statusCodes: { ...prev.statusCodes, [code]: weight },
+      statusCodes: { ...prev.statusCodes, [code]: { weight, message } },
     }));
     setError("");
-    setStatusCodeInput({ code: "200", weight: "100" });
+    setStatusCodeInput({ code: "200", weight: "100", message: "OK" });
   };
 
   const handleRemoveStatusCode = (code: string) => {
@@ -194,7 +198,9 @@ const Dashboard: FC = () => {
     });
   };
 
-  const applyStatusCodePreset = (preset: Record<string, number>) => {
+  const applyStatusCodePreset = (
+    preset: Record<string, { weight: number; message: string }>,
+  ) => {
     setFormData((prev) => ({ ...prev, statusCodes: preset }));
   };
 
@@ -477,7 +483,11 @@ const Dashboard: FC = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => applyStatusCodePreset({ "200": 100 })}
+                    onClick={() =>
+                      applyStatusCodePreset({
+                        "200": { weight: 100, message: "OK" },
+                      })
+                    }
                     className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border transition"
                   >
                     100% Success
@@ -485,7 +495,10 @@ const Dashboard: FC = () => {
                   <button
                     type="button"
                     onClick={() =>
-                      applyStatusCodePreset({ "200": 85, "500": 15 })
+                      applyStatusCodePreset({
+                        "200": { weight: 85, message: "OK" },
+                        "500": { weight: 15, message: "Server Error" },
+                      })
                     }
                     className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border transition"
                   >
@@ -494,7 +507,11 @@ const Dashboard: FC = () => {
                   <button
                     type="button"
                     onClick={() =>
-                      applyStatusCodePreset({ "200": 70, "400": 20, "500": 10 })
+                      applyStatusCodePreset({
+                        "200": { weight: 70, message: "OK" },
+                        "400": { weight: 20, message: "Bad Request" },
+                        "500": { weight: 10, message: "Server Error" },
+                      })
                     }
                     className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border transition"
                   >
@@ -507,15 +524,20 @@ const Dashboard: FC = () => {
                     </label>
                     <div className="flex gap-2 flex-wrap">
                       {Object.entries(formData.statusCodes).map(
-                        ([code, weight]) => (
+                        ([code, { weight, message }]) => (
                           <div
                             key={code}
                             className="px-3 py-2 bg-blue-100 border border-blue-300 rounded-lg flex items-center gap-2"
                           >
-                            <span className="font-mono text-sm">
-                              {code}:{" "}
-                              <span className="font-semibold">{weight}%</span>
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="font-mono text-sm">
+                                {code}:{" "}
+                                <span className="font-semibold">{weight}%</span>
+                              </span>
+                              <span className="text-xs text-gray-700">
+                                {message}
+                              </span>
+                            </div>
                             <button
                               type="button"
                               onClick={() => handleRemoveStatusCode(code)}
@@ -528,7 +550,7 @@ const Dashboard: FC = () => {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       <select
                         value={statusCodeInput.code}
                         onChange={(e) =>
@@ -572,6 +594,18 @@ const Dashboard: FC = () => {
                         min="0"
                         max="100"
                       />
+                      <input
+                        type="text"
+                        value={statusCodeInput.message}
+                        onChange={(e) =>
+                          setStatusCodeInput({
+                            ...statusCodeInput,
+                            message: e.target.value,
+                          })
+                        }
+                        className="p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                        placeholder="Custom message"
+                      />
                       <button
                         type="button"
                         onClick={handleAddStatusCode}
@@ -583,7 +617,7 @@ const Dashboard: FC = () => {
                     <p className="text-xs text-gray-500">
                       Total weight:{" "}
                       {Object.values(formData.statusCodes).reduce(
-                        (a, b) => a + b,
+                        (a, b) => a + b.weight,
                         0,
                       )}
                       % (must be 100%)
@@ -703,9 +737,14 @@ const Dashboard: FC = () => {
                     {testResponse.data && (
                       <div className="p-4 bg-green-50 border border-green-300 rounded-lg animate-fadeIn">
                         <div className="flex items-center justify-between mb-3">
-                          <p className="text-sm font-semibold text-green-700">
-                            ✓ Success Response
-                          </p>
+                          <div>
+                            <p className="text-sm font-semibold text-green-700">
+                              ✓ Success Response
+                            </p>
+                            {testResponse.message && (
+                              <p className="text-xs text-green-600 mt-1">{testResponse.message}</p>
+                            )}
+                          </div>
                           {testResponse.statusCode && (
                             <span className="px-3 py-1 bg-green-200 text-green-800 text-sm font-bold rounded">
                               {testResponse.statusCode}
@@ -784,12 +823,12 @@ const Dashboard: FC = () => {
                         {rule.statusCodes && (
                           <div className="text-xs text-gray-600 mt-2 flex flex-wrap gap-1">
                             {Object.entries(rule.statusCodes).map(
-                              ([code, weight]) => (
+                              ([code, { weight, message }]) => (
                                 <span
                                   key={code}
                                   className="bg-gray-200 px-2 py-1 rounded font-mono"
                                 >
-                                  {code}: {weight}%
+                                  {code}: {weight}% ({message})
                                 </span>
                               ),
                             )}

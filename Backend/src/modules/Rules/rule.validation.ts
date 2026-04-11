@@ -6,12 +6,18 @@ const createRuleSchema = z.object({
   latency: z.number().int().min(0).max(30000).optional().default(0),
   errorRate: z.number().int().min(0).max(100).optional().default(0),
   statusCodes: z
-    .record(z.string(), z.number().min(0).max(100))
+    .record(
+      z.string(),
+      z.object({
+        weight: z.number().min(0).max(100),
+        message: z.string().min(1),
+      }),
+    )
     .optional()
-    .default({ "200": 100 })
+    .default({ "200": { weight: 100, message: "OK" } })
     .refine(
       (data) => {
-        const weights = Object.values(data);
+        const weights = Object.values(data).map((item) => item.weight);
         const totalWeight = weights.reduce((sum, w) => sum + w, 0);
         return totalWeight === 100;
       },

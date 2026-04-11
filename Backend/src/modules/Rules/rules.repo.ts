@@ -17,7 +17,7 @@ async function createRule(
   apiKey: string,
   latency: number = 0,
   errorRate: number = 0,
-  statusCodes: Record<string, number>,
+  statusCodes: Record<string, { weight: number; message: string }>,
 ) {
   const values = {
     user_id: userId,

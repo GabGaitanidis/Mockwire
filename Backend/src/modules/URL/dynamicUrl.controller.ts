@@ -15,21 +15,16 @@ async function getDynamicUrlData(req: Request, res: Response) {
 
   const { mockData, latency, errorRate, statusCodes } = result;
 
-  if (errorRate > 0 && Math.random() < errorRate / 100) {
-    if (latency > 0) {
-      await new Promise((resolve) => setTimeout(resolve, latency));
-    }
-    return res.status(500).json({ statusCode: 500, message: "Simulated server error" });
-  }
-
   if (latency > 0) {
     await new Promise((resolve) => setTimeout(resolve, latency));
   }
 
-  const statusCode = pickRandomStatusCode(statusCodes);
+  const { code: statusCode, message: statusMessage } =
+    pickRandomStatusCode(statusCodes);
 
   return res.status(statusCode).json({
     statusCode,
+    message: statusMessage,
     data: mockData,
   });
 }

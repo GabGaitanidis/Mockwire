@@ -1,0 +1,1 @@
+ALTER TABLE "rules" ALTER COLUMN "status_codes" SET DEFAULT '{"200":{"weight":100,"message":"OK"}}'::jsonb;
