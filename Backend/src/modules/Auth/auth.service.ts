@@ -42,6 +42,7 @@ export async function registerUser(input: {
     sub: String(user.id),
     email: user.email,
     name: user.name,
+    role: user.role,
   });
 
   const refreshToken = signRefreshToken({
@@ -76,6 +77,7 @@ export async function loginUser(input: { email: string; password: string }) {
     sub: String(user.id),
     email: user.email,
     name: user.name,
+    role: user.role,
   });
 
   const refreshToken = signRefreshToken({
@@ -107,6 +109,7 @@ export async function refreshSession(refreshToken: string) {
     sub: String(user.id),
     email: user.email,
     name: user.name,
+    role: user.role,
   });
 
   const newRefreshToken = signRefreshToken({
@@ -127,9 +130,7 @@ export async function logoutUser(refreshToken?: string) {
   try {
     const payload = verifyRefreshToken(refreshToken);
     await updateRefreshToken(Number(payload.sub), null);
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
 
 export async function getMeUser(userId: number) {

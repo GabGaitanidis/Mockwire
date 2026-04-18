@@ -3,7 +3,6 @@ import {
   pgTable,
   timestamp,
   varchar,
-  text,
   jsonb,
 } from "drizzle-orm/pg-core";
 
@@ -13,6 +12,7 @@ export const userTable = pgTable("users", {
   email: varchar({ length: 255 }).notNull().unique(),
   password: varchar({ length: 255 }).notNull(),
   api_key: varchar({ length: 255 }).notNull(),
+  role: varchar({ length: 255 }).notNull().default("member"),
   refresh_token: varchar({ length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
