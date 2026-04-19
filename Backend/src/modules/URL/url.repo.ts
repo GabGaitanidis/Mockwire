@@ -1,6 +1,6 @@
 import { urlTable } from "../../db/schema";
 import { db } from "../../db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 async function getDynamicUrl(userId: number = 1) {
   const url = await db
@@ -31,4 +31,44 @@ async function createDynamicUrl(
   return inserted;
 }
 
-export { createDynamicUrl, getDynamicUrl };
+async function updateDynamicUrlById(
+  userId: number,
+  urlId: number,
+  url: string,
+) {
+  const updated = await db
+    .update(urlTable)
+    .set({ url })
+    .where(and(eq(urlTable.user_id, userId), eq(urlTable.id, urlId)))
+    .returning();
+
+  return updated[0] ?? null;
+}
+
+async function deleteDynamicUrlById(userId: number, urlId: number) {
+  const deleted = await db
+    .delete(urlTable)
+    .where(and(eq(urlTable.user_id, userId), eq(urlTable.id, urlId)))
+    .returning({ id: urlTable.id });
+
+  return deleted[0] ?? null;
+}
+
+async function deleteUrlsByRuleId(userId: number, ruleId: number) {
+  return db
+    .delete(urlTable)
+    .where(and(eq(urlTable.user_id, userId), eq(urlTable.rules_id, ruleId)));
+}
+
+async function deleteUrlsByUserId(userId: number) {
+  return db.delete(urlTable).where(eq(urlTable.user_id, userId));
+}
+
+export {
+  createDynamicUrl,
+  getDynamicUrl,
+  updateDynamicUrlById,
+  deleteDynamicUrlById,
+  deleteUrlsByRuleId,
+  deleteUrlsByUserId,
+};

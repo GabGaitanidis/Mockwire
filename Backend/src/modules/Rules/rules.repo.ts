@@ -16,7 +16,6 @@ async function createRule(
   dataSchema: Record<string, string>,
   apiKey: string,
   latency: number = 0,
-  errorRate: number = 0,
   statusCodes: Record<string, { weight: number; message: string }>,
 ) {
   const values = {
@@ -25,7 +24,6 @@ async function createRule(
     dataSchema,
     api_key: apiKey,
     latency,
-    errorRate,
     statusCodes,
   };
 
@@ -51,4 +49,45 @@ async function getEndpoint(userId: number, ruleId: number) {
 
   return data[0]?.endpoint;
 }
-export { getRulesByUser, createRule, getEndpoint, bindUrlToRule };
+
+async function updateRuleById(
+  userId: number,
+  ruleId: number,
+  data: Partial<{
+    endpoint: string;
+    dataSchema: Record<string, string>;
+    latency: number;
+    statusCodes: Record<string, { weight: number; message: string }>;
+  }>,
+) {
+  const updated = await db
+    .update(rulesTable)
+    .set(data)
+    .where(and(eq(rulesTable.user_id, userId), eq(rulesTable.id, ruleId)))
+    .returning();
+
+  return updated[0] ?? null;
+}
+
+async function deleteRuleById(userId: number, ruleId: number) {
+  const deleted = await db
+    .delete(rulesTable)
+    .where(and(eq(rulesTable.user_id, userId), eq(rulesTable.id, ruleId)))
+    .returning({ id: rulesTable.id });
+
+  return deleted[0] ?? null;
+}
+
+async function deleteRulesByUserId(userId: number) {
+  return db.delete(rulesTable).where(eq(rulesTable.user_id, userId));
+}
+
+export {
+  getRulesByUser,
+  createRule,
+  getEndpoint,
+  bindUrlToRule,
+  updateRuleById,
+  deleteRuleById,
+  deleteRulesByUserId,
+};

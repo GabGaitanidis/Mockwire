@@ -1,10 +1,17 @@
 import express from "express";
 import { requireAuth } from "../../middlewares/auth.middleware";
 
-import { getRulesController, createRulesController } from "./rules.controller";
+import {
+  createRulesController,
+  deleteRulesController,
+  getRulesController,
+  updateRulesController,
+} from "./rules.controller";
 import checkUserId from "../../middlewares/checkUserId";
 const ruleRouter = express.Router();
 
 ruleRouter.get("/", requireAuth, checkUserId, getRulesController);
 ruleRouter.post("/", requireAuth, checkUserId, createRulesController);
+ruleRouter.patch("/:id", requireAuth, checkUserId, updateRulesController);
+ruleRouter.delete("/:id", requireAuth, checkUserId, deleteRulesController);
 export default ruleRouter;

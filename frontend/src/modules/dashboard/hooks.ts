@@ -22,7 +22,6 @@ const INITIAL_FORM_DATA: RuleFormData = {
   endpoint: "",
   dataSchema: "",
   latency: 0,
-  errorRate: 0,
   statusCodes: { "200": { weight: 100, message: "OK" } },
 };
 
@@ -104,8 +103,7 @@ export function useDashboard() {
 
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        name === "latency" || name === "errorRate" ? Number(value) : value,
+      [name]: name === "latency" ? Number(value) : value,
     }));
   }
 
@@ -133,7 +131,6 @@ export function useDashboard() {
         endpoint: formData.endpoint,
         dataSchema,
         latency: formData.latency,
-        errorRate: formData.errorRate,
         statusCodes: formData.statusCodes,
       });
 

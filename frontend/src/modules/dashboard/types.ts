@@ -9,7 +9,6 @@ export interface Rule {
   id: number;
   endpoint: string;
   latency: number;
-  errorRate: number;
   dataSchema: Record<string, string>;
   statusCodes?: StatusCodesMap;
 }
@@ -32,7 +31,6 @@ export interface RuleFormData {
   endpoint: string;
   dataSchema: string;
   latency: number;
-  errorRate: number;
   statusCodes: StatusCodesMap;
 }
 
@@ -53,7 +51,6 @@ export interface CreateRuleRequest {
   endpoint: string;
   dataSchema: Record<string, string>;
   latency: number;
-  errorRate: number;
   statusCodes: StatusCodesMap;
 }
 

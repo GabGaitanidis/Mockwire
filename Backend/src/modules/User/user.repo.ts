@@ -50,4 +50,40 @@ async function createUser(
   return user;
 }
 
-export { createUser, getUsers, getUsersAPIKey, getUserAPIKeyWithEndpoint };
+async function updateUserById(
+  targetUserId: number,
+  data: Partial<{ name: string; email: string; password: string }>,
+) {
+  const updated = await db
+    .update(userTable)
+    .set(data)
+    .where(eq(userTable.id, targetUserId))
+    .returning({
+      id: userTable.id,
+      name: userTable.name,
+      email: userTable.email,
+      api_key: userTable.api_key,
+      role: userTable.role,
+      createdAt: userTable.createdAt,
+    });
+
+  return updated[0] ?? null;
+}
+
+async function deleteUserById(targetUserId: number) {
+  const deleted = await db
+    .delete(userTable)
+    .where(eq(userTable.id, targetUserId))
+    .returning({ id: userTable.id });
+
+  return deleted[0] ?? null;
+}
+
+export {
+  createUser,
+  getUsers,
+  getUsersAPIKey,
+  getUserAPIKeyWithEndpoint,
+  updateUserById,
+  deleteUserById,
+};

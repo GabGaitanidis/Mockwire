@@ -286,24 +286,6 @@ const Dashboard: FC = () => {
                           placeholder="1000"
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Error Rate (%)
-                          <span className="block text-xs text-gray-500 font-normal">
-                            Chance of returning error (0-100%)
-                          </span>
-                        </label>
-                        <input
-                          type="number"
-                          name="errorRate"
-                          value={formData.errorRate}
-                          onChange={handleChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                          min="0"
-                          max="100"
-                          placeholder="5"
-                        />
-                      </div>
                     </div>
                     <button
                       type="button"
@@ -500,8 +482,7 @@ const Dashboard: FC = () => {
                       <option value="">Choose a rule</option>
                       {rules.map((rule) => (
                         <option key={rule.id} value={rule.id}>
-                          {rule.endpoint} (Latency: {rule.latency}ms, Error:{" "}
-                          {rule.errorRate}%)
+                          {rule.endpoint} (Latency: {rule.latency}ms)
                         </option>
                       ))}
                     </select>
@@ -637,12 +618,6 @@ const Dashboard: FC = () => {
                               Latency:{" "}
                               <span className="font-mono text-blue-600">
                                 {rule.latency}ms
-                              </span>
-                            </span>
-                            <span className="inline-block">
-                              Error:{" "}
-                              <span className="font-mono text-red-600">
-                                {rule.errorRate}%
                               </span>
                             </span>
                           </p>
