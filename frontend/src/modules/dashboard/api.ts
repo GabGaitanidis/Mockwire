@@ -1,3 +1,4 @@
+import rawAxios from "axios";
 import axios from "../../utils/axiosInstance";
 import type {
   CreateDynamicUrlResponse,
@@ -10,13 +11,7 @@ import type {
   UrlsResponse,
 } from "./types";
 
-const HOSTS_TO_PROXY = [
-  "http://localhost:5000",
-  "https://localhost:5000",
-  "http://localhost:3001",
-  "https://localhost:3001",
-  "https://api-generator-7lxt.onrender.com",
-];
+const BACKEND_BASE_URL = "http://localhost:5000";
 
 function normalizeUrlList(rawUrls: unknown): UrlItem[] {
   if (!Array.isArray(rawUrls)) {
@@ -38,15 +33,31 @@ function normalizeUrlList(rawUrls: unknown): UrlItem[] {
     .filter((item): item is UrlItem => Boolean(item));
 }
 
-function toFrontendTestPath(generatedUrl: string): string {
+function toBackendDynamicUrl(generatedUrl: string): string {
   try {
     const parsed = new URL(generatedUrl);
-    return `/api${parsed.pathname}${parsed.search}`;
-  } catch {
-    let testUrl = generatedUrl;
-    for (const host of HOSTS_TO_PROXY) {
-      testUrl = testUrl.replace(host, "/api");
+    let pathname = parsed.pathname;
+
+    if (pathname.startsWith("/api/mock/")) {
+      pathname = `/dynamics${pathname}`;
     }
+
+    return `${BACKEND_BASE_URL}${pathname}${parsed.search}`;
+  } catch {
+    let testUrl = generatedUrl
+      .replace("https://localhost:5000", BACKEND_BASE_URL)
+      .replace("http://localhost:5000", BACKEND_BASE_URL)
+      .replace("https://localhost:3001", BACKEND_BASE_URL)
+      .replace("http://localhost:3001", BACKEND_BASE_URL)
+      .replace("https://api-generator-7lxt.onrender.com", BACKEND_BASE_URL);
+
+    if (testUrl.startsWith(`${BACKEND_BASE_URL}/api/mock/`)) {
+      testUrl = testUrl.replace(
+        `${BACKEND_BASE_URL}/api/mock/`,
+        `${BACKEND_BASE_URL}/dynamics/api/mock/`,
+      );
+    }
+
     return testUrl;
   }
 }
@@ -103,9 +114,9 @@ export async function createDynamicUrlApi(
 export async function testDynamicUrlApi(
   generatedUrl: string,
 ): Promise<{ message: string; statusCode: number; data: unknown }> {
-  const response = await axios.get<
+  const response = await rawAxios.get<
     MessageResponse & { mockData?: unknown; data?: unknown }
-  >(toFrontendTestPath(generatedUrl));
+  >(toBackendDynamicUrl(generatedUrl));
 
   return {
     message: response.data.message,
