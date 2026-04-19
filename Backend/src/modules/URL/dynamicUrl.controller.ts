@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import getDynamicsUrlDataService from "./getDynamicsUrlData.service";
 import pickRandomStatusCode from "../../data_generation/statusCodePick";
+import { AppError } from "../../errors/AppError";
 
 async function getDynamicUrlData(req: Request, res: Response) {
   const rawParams = {
@@ -10,7 +11,7 @@ async function getDynamicUrlData(req: Request, res: Response) {
   const result = await getDynamicsUrlDataService(rawParams);
 
   if (!result) {
-    return res.status(404).json({ message: "No data for this" });
+    throw new AppError("No data found for this endpoint", 404);
   }
 
   const { mockData, latency, errorRate, statusCodes } = result;
@@ -25,6 +26,7 @@ async function getDynamicUrlData(req: Request, res: Response) {
   return res.status(statusCode).json({
     statusCode,
     message: statusMessage,
+    mockData,
     data: mockData,
   });
 }

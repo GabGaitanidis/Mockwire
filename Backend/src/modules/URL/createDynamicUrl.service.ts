@@ -3,11 +3,12 @@ import urlGenerator from "../../data_generation/urlCreator";
 import { createDynamicUrl } from "./url.repo";
 import { createUrlSchema } from "./url.validation";
 import { getUsersAPIKey } from "../User/user.repo";
+import { AppError } from "../../errors/AppError";
 
 async function createDynamicUrlService(userId: number, params: Object) {
   const validation = createUrlSchema.safeParse(params);
   if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.error.message}`);
+    throw new AppError(`Validation failed: ${validation.error.message}`, 400);
   }
   const { ruleId } = validation.data;
   const apiKey = await getUsersAPIKey(userId);

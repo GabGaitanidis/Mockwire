@@ -1,41 +1,13 @@
-import { useState, FC } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "../utils/axiosInstance";
-
-interface SignupFormData {
-  name: string;
-  email: string;
-  password: string;
-}
+import { FC } from "react";
+import { useSignup } from "../modules/signup/hooks";
 
 const Signup: FC = () => {
-  const [formData, setFormData] = useState<SignupFormData>({
-    name: "",
-    email: "",
-    password: "",
-  });
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post("/api/auth/register", formData);
-      localStorage.setItem("apiKey", response.data.user.api_key);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      navigate("/");
-    } catch (err) {
-      setError("Signup failed. Email might already be in use.");
-    }
-  };
+  const { formData, error, message, handleChange, handleSubmit } = useSignup();
 
   return (
     <div className="container mx-auto mt-10 max-w-md">
       <h2 className="text-2xl font-bold mb-4">Sign Up</h2>
+      {message && <p className="text-green-600 mb-4">{message}</p>}
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow">
         <div className="mb-4">

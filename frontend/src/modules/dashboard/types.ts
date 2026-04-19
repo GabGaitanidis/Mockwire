@@ -1,0 +1,78 @@
+export interface StatusCodeRule {
+  weight: number;
+  message: string;
+}
+
+export type StatusCodesMap = Record<string, StatusCodeRule>;
+
+export interface Rule {
+  id: number;
+  endpoint: string;
+  latency: number;
+  errorRate: number;
+  dataSchema: Record<string, string>;
+  statusCodes?: StatusCodesMap;
+}
+
+export interface UrlItem {
+  id?: number;
+  url: string;
+  createdAt?: string;
+  rules_id?: number;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  api_key: string;
+}
+
+export interface RuleFormData {
+  endpoint: string;
+  dataSchema: string;
+  latency: number;
+  errorRate: number;
+  statusCodes: StatusCodesMap;
+}
+
+export interface StatusCodeInput {
+  code: string;
+  weight: string;
+  message: string;
+}
+
+export interface TestResponse {
+  statusCode?: number;
+  message?: string;
+  data: any;
+  error: string | null;
+}
+
+export interface CreateRuleRequest {
+  endpoint: string;
+  dataSchema: Record<string, string>;
+  latency: number;
+  errorRate: number;
+  statusCodes: StatusCodesMap;
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
+export interface RulesResponse extends MessageResponse {
+  rules: Rule[];
+}
+
+export interface UrlsResponse extends MessageResponse {
+  urls: UrlItem[] | string[];
+}
+
+export interface CreateRuleResponse extends MessageResponse {
+  rule: Rule;
+}
+
+export interface CreateDynamicUrlResponse extends MessageResponse {
+  url: UrlItem | string;
+}

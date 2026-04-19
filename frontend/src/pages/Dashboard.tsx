@@ -1,221 +1,34 @@
-import { useState, useEffect, FC } from "react";
-import axios from "../utils/axiosInstance";
-
-interface Rule {
-  id: number;
-  endpoint: string;
-  latency: number;
-  errorRate: number;
-  dataSchema: Record<string, string>;
-  statusCodes?: Record<string, { weight: number; message: string }>;
-}
-
-interface URL {
-  id: number;
-  url: string;
-  createdAt: string;
-  rules_id: number;
-}
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  api_key: string;
-}
-
-interface FormData {
-  endpoint: string;
-  dataSchema: string;
-  latency: number;
-  errorRate: number;
-  statusCodes: Record<string, { weight: number; message: string }>;
-}
-
-interface TestResponse {
-  statusCode?: number;
-  message?: string;
-  data: any;
-  error: string | null;
-}
+import { FC } from "react";
+import { useDashboard } from "../modules/dashboard/hooks";
 
 const Dashboard: FC = () => {
-  const [rules, setRules] = useState<Rule[]>([]);
-  const [urls, setUrls] = useState<URL[]>([]);
-  const [formData, setFormData] = useState<FormData>({
-    endpoint: "",
-    dataSchema: "",
-    latency: 0,
-    errorRate: 0,
-    statusCodes: { "200": { weight: 100, message: "OK" } },
-  });
-  const [statusCodeInput, setStatusCodeInput] = useState({
-    code: "200",
-    weight: "100",
-    message: "OK",
-  });
-  const [selectedRuleId, setSelectedRuleId] = useState("");
-  const [generatedUrl, setGeneratedUrl] = useState("");
-  const [user, setUser] = useState<User | null>(null);
-  const [error, setError] = useState("");
-  const [testResponse, setTestResponse] = useState<TestResponse>({
-    data: null,
-    error: null,
-  });
-  const [testLoading, setTestLoading] = useState(false);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      fetchRules();
-      fetchUrls();
-    }
-  }, []);
-
-  const fetchRules = async () => {
-    try {
-      const response = await axios.get("/api/rules");
-      setRules(response.data.rules);
-    } catch (err) {
-      setError("Failed to fetch rules");
-    }
-  };
-
-  const fetchUrls = async () => {
-    try {
-      const response = await axios.get("/api/dynamics");
-      const fetchedUrls = Array.isArray(response.data)
-        ? response.data
-        : (response.data?.urls ?? []);
-      setUrls(fetchedUrls);
-    } catch (err) {
-      setError("Failed to fetch URLs");
-    }
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]:
-        name === "latency" || name === "errorRate" ? Number(value) : value,
-    });
-  };
-
-  const handleSubmitRule = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!user) {
-      setError("Please login first");
-      return;
-    }
-    try {
-      const dataSchema = JSON.parse(formData.dataSchema);
-      const totalWeight = Object.values(formData.statusCodes).reduce(
-        (a, b) => a + b.weight,
-        0,
-      );
-      if (totalWeight !== 100) {
-        setError("Status code weights must total 100%");
-        return;
-      }
-      await axios.post("/api/rules", { ...formData, dataSchema });
-      setError("");
-      fetchRules();
-      setFormData({
-        endpoint: "",
-        dataSchema: "",
-        latency: 0,
-        errorRate: 0,
-        statusCodes: { "200": { weight: 100, message: "OK" } },
-      });
-      setStatusCodeInput({ code: "200", weight: "100", message: "OK" });
-    } catch (err) {
-      setError("Failed to create rule");
-    }
-  };
-
-  const handleGenerateUrl = async () => {
-    if (!user || !selectedRuleId) return;
-    try {
-      const response = await axios.post(`/api/dynamics/${selectedRuleId}`);
-      setGeneratedUrl(response.data.url);
-      setTestResponse({ data: null, error: null });
-      fetchUrls();
-    } catch (err) {
-      setError("Failed to generate URL");
-    }
-  };
-  const handleTestUrl = async () => {
-    if (!generatedUrl) return;
-    setTestLoading(true);
-    setTestResponse({ data: null, error: null });
-    try {
-      const testUrl = generatedUrl
-        .replace("http://localhost:5000", "/api")
-        .replace("http://localhost:3001", "/api")
-        .replace("https://localhost:3001", "/api")
-        .replace("https://api-generator-7lxt.onrender.com", "/api");
-      console.log("generatedUrl:", generatedUrl);
-      console.log("testUrl:", testUrl);
-      const response = await axios.get(testUrl);
-      setTestResponse({
-        statusCode: response.status,
-        message: response.data.message,
-        data: response.data.data,
-        error: null,
-      });
-    } catch (err: any) {
-      setTestResponse({
-        statusCode: err.response?.status,
-        data: null,
-        error: err.response?.data?.message || "Request failed",
-      });
-    } finally {
-      setTestLoading(false);
-    }
-  };
-
-  const handleAddStatusCode = () => {
-    const code = statusCodeInput.code;
-    const weight = Number(statusCodeInput.weight);
-    const message = statusCodeInput.message.trim();
-    if (!code || weight <= 0 || weight > 100 || !message) {
-      setError("Invalid status code, weight, or message");
-      return;
-    }
-    setFormData((prev) => ({
-      ...prev,
-      statusCodes: { ...prev.statusCodes, [code]: { weight, message } },
-    }));
-    setError("");
-    setStatusCodeInput({ code: "200", weight: "100", message: "OK" });
-  };
-
-  const handleRemoveStatusCode = (code: string) => {
-    if (Object.keys(formData.statusCodes).length === 1) {
-      setError("Must have at least one status code");
-      return;
-    }
-    setFormData((prev) => {
-      const newCodes = { ...prev.statusCodes };
-      delete newCodes[code];
-      return { ...prev, statusCodes: newCodes };
-    });
-  };
-
-  const applyStatusCodePreset = (
-    preset: Record<string, { weight: number; message: string }>,
-  ) => {
-    setFormData((prev) => ({ ...prev, statusCodes: preset }));
-  };
+  const {
+    rules,
+    urls,
+    formData,
+    statusCodeInput,
+    selectedRuleId,
+    generatedUrl,
+    user,
+    error,
+    message,
+    testResponse,
+    testLoading,
+    setFormData,
+    setStatusCodeInput,
+    setSelectedRuleId,
+    handleChange,
+    handleSubmitRule,
+    handleGenerateUrl,
+    handleTestUrl,
+    handleAddStatusCode,
+    handleRemoveStatusCode,
+    applyStatusCodePreset,
+  } = useDashboard();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 overflow-x-hidden">
       <div className="max-w-screen-2xl mx-auto px-4">
-        {/* Header */}
         <div className="bg-white shadow-md">
           <div className="container mx-auto px-4 py-6 flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-800">
@@ -237,7 +50,12 @@ const Dashboard: FC = () => {
         </div>
 
         <div className="container mx-auto px-4 py-8">
-          {/* Error Message */}
+          {message && (
+            <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+              {message}
+            </div>
+          )}
+
           {error && (
             <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
               {error}
@@ -246,7 +64,6 @@ const Dashboard: FC = () => {
 
           {user ? (
             <div>
-              {/* User Info Card */}
               <div className="mb-8 p-6 bg-white rounded-lg shadow-md border-l-4 border-blue-500">
                 <p className="text-gray-700">
                   <span className="font-semibold">Welcome,</span> {user.name}!
@@ -267,9 +84,7 @@ const Dashboard: FC = () => {
                 </div>
               </div>
 
-              {/* Main Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                {/* Create Rule Card */}
                 <div className="lg:col-span-1 bg-white rounded-lg shadow-md p-6 min-w-0">
                   <h2 className="text-2xl font-bold mb-4 text-gray-800">
                     Create Rule
@@ -643,7 +458,6 @@ const Dashboard: FC = () => {
                   </form>
                 </div>
 
-                {/* Generate URL and Test Card */}
                 <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6 min-w-0">
                   <h2 className="text-2xl font-bold mb-4 text-gray-800">
                     Test API
@@ -746,7 +560,6 @@ const Dashboard: FC = () => {
                         )}
                       </button>
 
-                      {/* Response Display */}
                       {testResponse.data && (
                         <div className="p-4 bg-green-50 border border-green-300 rounded-lg animate-fadeIn">
                           <div className="flex items-center justify-between mb-3">
@@ -804,9 +617,7 @@ const Dashboard: FC = () => {
                 </div>
               </div>
 
-              {/* Rules and URLs Section */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Rules List */}
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <h3 className="text-xl font-bold mb-4 text-gray-800">
                     Your Rules
@@ -859,7 +670,6 @@ const Dashboard: FC = () => {
                   )}
                 </div>
 
-                {/* Generated URLs List */}
                 <div className="bg-white rounded-lg shadow-md p-6 min-w-0 overflow-hidden">
                   <h3 className="text-xl font-bold mb-4 text-gray-800">
                     Your URLs

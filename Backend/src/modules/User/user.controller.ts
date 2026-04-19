@@ -5,7 +5,10 @@ import { getUsers } from "./user.repo";
 async function getUsersController(req: Request, res: Response) {
   const users = await getUsers();
 
-  res.status(200).json({ message: "Success!", users });
+  res.status(200).json({
+    message: "Users fetched successfully",
+    users,
+  });
 }
 
 async function createUserController(req: Request, res: Response) {
@@ -15,7 +18,10 @@ async function createUserController(req: Request, res: Response) {
     req.body.password,
   );
 
-  res.status(201).json({ message: "User Created", user });
+  res.status(201).json({
+    message: "User created successfully",
+    user,
+  });
 }
 
 export { createUserController, getUsersController };

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { validateLogin, validateRegister } from "./auth.validation";
 import { setAuthCookies, clearAuthCookies } from "../../utils/authCookies";
+import { AppError } from "../../errors/AppError";
 
 import {
   registerUser,
@@ -39,7 +40,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
 
-    return res.json({
+    return res.status(200).json({
       message: "Logged in successfully",
       user: result.user,
     });
@@ -52,14 +53,17 @@ export async function refresh(req: Request, res: Response, next: NextFunction) {
   try {
     const token = req.cookies?.refreshToken;
     if (!token) {
-      return res.status(401).json({ message: "Missing refresh token" });
+      throw new AppError("Missing refresh token", 401);
     }
 
     const result = await refreshSession(token);
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
 
-    return res.json({ message: "Tokens refreshed" });
+    return res.status(200).json({
+      message: "Tokens refreshed",
+      action: "refresh",
+    });
   } catch (error) {
     next(error);
   }
@@ -70,7 +74,10 @@ export async function logout(req: Request, res: Response, next: NextFunction) {
     await logoutUser(req.cookies?.refreshToken);
     clearAuthCookies(res);
 
-    return res.json({ message: "Logged out successfully" });
+    return res.status(200).json({
+      message: "Logged out successfully",
+      action: "logout",
+    });
   } catch (error) {
     clearAuthCookies(res);
     next(error);
@@ -80,12 +87,12 @@ export async function logout(req: Request, res: Response, next: NextFunction) {
 export async function getMe(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      throw new AppError("Unauthorized", 401);
     }
 
     const user = await getMeUser(Number(req.user.id));
 
-    return res.json({
+    return res.status(200).json({
       message: "Authenticated user",
       user,
     });

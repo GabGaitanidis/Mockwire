@@ -1,39 +1,13 @@
-import { useState, FC } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "../utils/axiosInstance";
-
-interface LoginFormData {
-  email: string;
-  password: string;
-}
+import { FC } from "react";
+import { useLogin } from "../modules/login/hooks";
 
 const Login: FC = () => {
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
-  });
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post("/api/auth/login", formData);
-      localStorage.setItem("apiKey", response.data.user.api_key);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      navigate("/");
-    } catch (err) {
-      setError("Login failed. Please check your credentials.");
-    }
-  };
+  const { formData, error, message, handleChange, handleSubmit } = useLogin();
 
   return (
     <div className="container mx-auto mt-10 max-w-md">
       <h2 className="text-2xl font-bold mb-4">Login</h2>
+      {message && <p className="text-green-600 mb-4">{message}</p>}
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow">
         <div className="mb-4">

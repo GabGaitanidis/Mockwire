@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken } from "../utils/jwt";
+import { AppError } from "../errors/AppError";
 
 function getTokenFromRequest(req: Request): string | undefined {
   const cookieToken = req.cookies?.accessToken;
@@ -19,7 +20,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
     const token = getTokenFromRequest(req);
 
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized" });
+      throw new AppError("Unauthorized", 401);
     }
 
     const payload = verifyAccessToken(token);
@@ -34,6 +35,6 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
     next();
   } catch (err) {
     console.error("requireAuth error", err);
-    return res.status(401).json({ message: "Invalid or expired access token" });
+    return next(new AppError("Invalid or expired access token", 401));
   }
 }

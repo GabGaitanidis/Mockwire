@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../errors/AppError";
+import { ZodError } from "zod";
 
 export function notFoundHandler(_req: Request, res: Response) {
   return res.status(404).json({ message: "Route not found" });
@@ -16,6 +17,13 @@ export function errorHandler(
   if (err instanceof AppError) {
     return res.status(err.status).json({
       message: err.message,
+    });
+  }
+
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      message: "Validation failed",
+      details: err.issues,
     });
   }
 

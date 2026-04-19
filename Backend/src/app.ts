@@ -29,7 +29,10 @@ app.use("/users", userRouter);
 app.use("/rules", urlRouter);
 app.use("/dynamics", dynamicRouter);
 app.get("/health", (req, res) => {
-  res.send("Server good");
+  res.status(200).json({
+    message: "Health check successful",
+    status: "ok",
+  });
 });
 
 app.use(notFoundHandler);
