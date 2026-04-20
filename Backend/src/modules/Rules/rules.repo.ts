@@ -54,6 +54,7 @@ async function updateRuleById(
   userId: number,
   ruleId: number,
   data: Partial<{
+    version: string;
     endpoint: string;
     dataSchema: Record<string, string>;
     latency: number;

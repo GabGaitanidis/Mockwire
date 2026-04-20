@@ -7,6 +7,7 @@ export type StatusCodesMap = Record<string, StatusCodeRule>;
 
 export interface Rule {
   id: number;
+  version?: string;
   endpoint: string;
   latency: number;
   dataSchema: Record<string, string>;

@@ -145,10 +145,11 @@ export async function createRuleApi(
 
 export async function updateRuleApi(
   ruleId: number,
+  version: string,
   payload: Partial<CreateRuleRequest>,
 ): Promise<{ message: string; rule: Rule }> {
   const response = await axios.patch<CreateRuleResponse>(
-    `/rules/${ruleId}`,
+    `/rules/${encodeURIComponent(version)}/${ruleId}`,
     payload,
   );
 

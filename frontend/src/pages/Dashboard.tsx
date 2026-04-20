@@ -662,10 +662,14 @@ const Dashboard: FC = () => {
                                     return;
                                   }
 
-                                  await handleUpdateRule(rule.id, {
-                                    endpoint,
-                                    latency,
-                                  });
+                                  await handleUpdateRule(
+                                    rule.id,
+                                    rule.version ?? "v1",
+                                    {
+                                      endpoint,
+                                      latency,
+                                    },
+                                  );
                                 }}
                                 disabled={editingRuleId === rule.id}
                                 className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200 disabled:opacity-50"
@@ -689,6 +693,12 @@ const Dashboard: FC = () => {
                             </div>
                           </div>
                           <p className="text-xs text-gray-600 mt-2">
+                            <span className="inline-block mr-4">
+                              Version:{" "}
+                              <span className="font-mono text-indigo-600">
+                                {rule.version ?? "v1"}
+                              </span>
+                            </span>
                             <span className="inline-block mr-4">
                               Latency:{" "}
                               <span className="font-mono text-blue-600">

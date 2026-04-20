@@ -21,7 +21,7 @@ async function getDynamicUrlData(req: Request, res: Response) {
     throw new AppError("No data found for this endpoint", 404);
   }
 
-  const { mockData, latency, statusCodes } = result;
+  const { mockData, latency, statusCodes, version } = result;
 
   if (latency > 0) {
     console.log(latency);
@@ -36,6 +36,7 @@ async function getDynamicUrlData(req: Request, res: Response) {
   console.log(statusCode);
   return res.status(statusCode).json({
     error,
+    version,
     statusCode,
     message: statusMessage,
     latency,

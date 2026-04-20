@@ -276,6 +276,7 @@ export function useDashboard() {
 
   async function handleUpdateRule(
     ruleId: number,
+    version: string,
     payload: Partial<RuleFormData>,
   ) {
     try {
@@ -302,7 +303,7 @@ export function useDashboard() {
         requestPayload.dataSchema = JSON.parse(payload.dataSchema);
       }
 
-      const response = await updateRuleApi(ruleId, requestPayload);
+      const response = await updateRuleApi(ruleId, version, requestPayload);
       setMessage(response.message);
       setError("");
       setEditingRuleId(null);

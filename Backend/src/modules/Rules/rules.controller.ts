@@ -29,12 +29,17 @@ async function createRulesController(req: Request, res: Response) {
 async function updateRulesController(req: Request, res: Response) {
   const userId = Number(req.user?.id);
   const ruleId = Number(req.params.id);
+  const version = req.params.version;
 
   if (!ruleId || Number.isNaN(ruleId)) {
     throw new AppError("Invalid rule id", 400);
   }
 
-  const rule = await updateRuleService(userId, ruleId, req.body);
+  if (!version || typeof version !== "string") {
+    throw new AppError("Invalid rule version", 400);
+  }
+
+  const rule = await updateRuleService(userId, ruleId, version, req.body);
 
   return res.status(200).json({
     message: "Rule updated successfully",

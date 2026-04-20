@@ -12,6 +12,11 @@ const ruleRouter = express.Router();
 
 ruleRouter.get("/", requireAuth, checkUserId, getRulesController);
 ruleRouter.post("/", requireAuth, checkUserId, createRulesController);
-ruleRouter.patch("/:id", requireAuth, checkUserId, updateRulesController);
+ruleRouter.patch(
+  "/:version/:id",
+  requireAuth,
+  checkUserId,
+  updateRulesController,
+);
 ruleRouter.delete("/:id", requireAuth, checkUserId, deleteRulesController);
 export default ruleRouter;
