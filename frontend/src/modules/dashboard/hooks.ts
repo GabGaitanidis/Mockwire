@@ -4,9 +4,13 @@ import { AxiosError } from "axios";
 import {
   createDynamicUrlApi,
   createRuleApi,
+  deleteDynamicUrlApi,
+  deleteRuleApi,
   fetchRulesApi,
   fetchUrlsApi,
   testDynamicUrlApi,
+  updateDynamicUrlApi,
+  updateRuleApi,
 } from "./api";
 import type {
   Rule,
@@ -59,6 +63,8 @@ export function useDashboard() {
     INITIAL_TEST_RESPONSE,
   );
   const [testLoading, setTestLoading] = useState(false);
+  const [editingRuleId, setEditingRuleId] = useState<number | null>(null);
+  const [editingUrlId, setEditingUrlId] = useState<number | null>(null);
 
   async function fetchRules() {
     try {
@@ -161,6 +167,84 @@ export function useDashboard() {
     }
   }
 
+  async function handleDeleteRule(ruleId: number) {
+    try {
+      const response = await deleteRuleApi(ruleId);
+      setMessage(response.message);
+      setError("");
+      await fetchRules();
+      await fetchUrls();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to delete rule"));
+    }
+  }
+
+  async function handleUpdateRule(
+    ruleId: number,
+    payload: Partial<RuleFormData>,
+  ) {
+    try {
+      const requestPayload: Partial<{
+        endpoint: string;
+        dataSchema: Record<string, string>;
+        latency: number;
+        statusCodes: StatusCodesMap;
+      }> = {};
+
+      if (payload.endpoint !== undefined) {
+        requestPayload.endpoint = payload.endpoint;
+      }
+
+      if (payload.latency !== undefined) {
+        requestPayload.latency = payload.latency;
+      }
+
+      if (payload.statusCodes !== undefined) {
+        requestPayload.statusCodes = payload.statusCodes;
+      }
+
+      if (payload.dataSchema !== undefined) {
+        requestPayload.dataSchema = JSON.parse(payload.dataSchema);
+      }
+
+      const response = await updateRuleApi(ruleId, requestPayload);
+      setMessage(response.message);
+      setError("");
+      setEditingRuleId(null);
+      await fetchRules();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to update rule"));
+    }
+  }
+
+  async function handleDeleteUrl(urlId?: number) {
+    if (!urlId) {
+      setError("Cannot delete URL without id");
+      return;
+    }
+
+    try {
+      const response = await deleteDynamicUrlApi(urlId);
+      setMessage(response.message);
+      setError("");
+      await fetchUrls();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to delete URL"));
+    }
+  }
+
+  async function handleUpdateUrl(urlId: number, url: string) {
+    try {
+      const response = await updateDynamicUrlApi(urlId, url);
+      setMessage(response.message);
+      setError("");
+      setEditingUrlId(null);
+      await fetchUrls();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to update URL"));
+    }
+  }
+
   async function handleTestUrl() {
     if (!generatedUrl) {
       return;
@@ -240,15 +324,23 @@ export function useDashboard() {
     message,
     testResponse,
     testLoading,
+    editingRuleId,
+    editingUrlId,
     setFormData,
     setStatusCodeInput,
     setSelectedRuleId,
+    setEditingRuleId,
+    setEditingUrlId,
     setError,
     setMessage,
     handleChange,
     handleSubmitRule,
     handleGenerateUrl,
     handleTestUrl,
+    handleDeleteRule,
+    handleUpdateRule,
+    handleDeleteUrl,
+    handleUpdateUrl,
     handleAddStatusCode,
     handleRemoveStatusCode,
     applyStatusCodePreset,

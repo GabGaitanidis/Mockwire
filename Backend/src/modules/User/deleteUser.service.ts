@@ -1,6 +1,4 @@
 import { AppError } from "../../errors/AppError";
-import { deleteUrlsByUserId } from "../URL/url.repo";
-import { deleteRulesByUserId } from "../Rules/rules.repo";
 import { deleteUserById } from "./user.repo";
 
 async function deleteUserService(
@@ -14,8 +12,6 @@ async function deleteUserService(
     throw new AppError("Forbidden", 403);
   }
 
-  await deleteUrlsByUserId(targetUserId);
-  await deleteRulesByUserId(targetUserId);
   const deletedUser = await deleteUserById(targetUserId);
 
   if (!deletedUser) {

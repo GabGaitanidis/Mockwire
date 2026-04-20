@@ -78,10 +78,6 @@ async function deleteRuleById(userId: number, ruleId: number) {
   return deleted[0] ?? null;
 }
 
-async function deleteRulesByUserId(userId: number) {
-  return db.delete(rulesTable).where(eq(rulesTable.user_id, userId));
-}
-
 export {
   getRulesByUser,
   createRule,
@@ -89,5 +85,4 @@ export {
   bindUrlToRule,
   updateRuleById,
   deleteRuleById,
-  deleteRulesByUserId,
 };

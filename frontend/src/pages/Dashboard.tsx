@@ -14,6 +14,10 @@ const Dashboard: FC = () => {
     message,
     testResponse,
     testLoading,
+    editingRuleId,
+    editingUrlId,
+    setEditingRuleId,
+    setEditingUrlId,
     setFormData,
     setStatusCodeInput,
     setSelectedRuleId,
@@ -21,6 +25,10 @@ const Dashboard: FC = () => {
     handleSubmitRule,
     handleGenerateUrl,
     handleTestUrl,
+    handleDeleteRule,
+    handleUpdateRule,
+    handleDeleteUrl,
+    handleUpdateUrl,
     handleAddStatusCode,
     handleRemoveStatusCode,
     applyStatusCodePreset,
@@ -610,9 +618,63 @@ const Dashboard: FC = () => {
                           key={rule.id}
                           className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500 hover:shadow-md transition hover:scale-105 transform"
                         >
-                          <p className="font-semibold text-gray-800">
-                            {rule.endpoint}
-                          </p>
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="font-semibold text-gray-800 break-words">
+                              {rule.endpoint}
+                            </p>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                onClick={async () => {
+                                  setEditingRuleId(rule.id);
+                                  const endpoint = window.prompt(
+                                    "Update endpoint",
+                                    rule.endpoint,
+                                  );
+                                  const latencyRaw = window.prompt(
+                                    "Update latency (ms)",
+                                    String(rule.latency ?? 0),
+                                  );
+
+                                  if (
+                                    endpoint === null ||
+                                    latencyRaw === null
+                                  ) {
+                                    setEditingRuleId(null);
+                                    return;
+                                  }
+
+                                  const latency = Number(latencyRaw);
+                                  if (Number.isNaN(latency) || latency < 0) {
+                                    setEditingRuleId(null);
+                                    return;
+                                  }
+
+                                  await handleUpdateRule(rule.id, {
+                                    endpoint,
+                                    latency,
+                                  });
+                                }}
+                                disabled={editingRuleId === rule.id}
+                                className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200 disabled:opacity-50"
+                              >
+                                {editingRuleId === rule.id
+                                  ? "Updating..."
+                                  : "Edit"}
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  const ok = window.confirm(
+                                    "Delete this rule and related URLs?",
+                                  );
+                                  if (!ok) return;
+                                  await handleDeleteRule(rule.id);
+                                }}
+                                className="text-xs px-2 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
                           <p className="text-xs text-gray-600 mt-2">
                             <span className="inline-block mr-4">
                               Latency:{" "}
@@ -659,14 +721,47 @@ const Dashboard: FC = () => {
                           <p className="text-xs break-words font-mono text-gray-700 mb-2 max-w-full">
                             {url.url}
                           </p>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(url.url);
-                            }}
-                            className="text-xs text-green-600 hover:text-green-700 font-semibold opacity-0 group-hover:opacity-100 transition"
-                          >
-                            Copy URL
-                          </button>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(url.url);
+                              }}
+                              className="text-xs text-green-600 hover:text-green-700 font-semibold"
+                            >
+                              Copy URL
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!url.id) return;
+                                setEditingUrlId(url.id);
+                                const nextUrl = window.prompt(
+                                  "Update URL",
+                                  url.url,
+                                );
+                                if (nextUrl === null) {
+                                  setEditingUrlId(null);
+                                  return;
+                                }
+                                await handleUpdateUrl(url.id, nextUrl);
+                              }}
+                              disabled={!url.id || editingUrlId === url.id}
+                              className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200 disabled:opacity-50"
+                            >
+                              {editingUrlId === url.id ? "Updating..." : "Edit"}
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!url.id) return;
+                                const ok = window.confirm("Delete this URL?");
+                                if (!ok) return;
+                                await handleDeleteUrl(url.id);
+                              }}
+                              disabled={!url.id}
+                              className="text-xs px-2 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200 disabled:opacity-50"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </li>
                       ))}
                     </ul>

@@ -94,6 +94,30 @@ export async function createRuleApi(
   };
 }
 
+export async function updateRuleApi(
+  ruleId: number,
+  payload: Partial<CreateRuleRequest>,
+): Promise<{ message: string; rule: Rule }> {
+  const response = await axios.patch<CreateRuleResponse>(
+    `/api/rules/${ruleId}`,
+    payload,
+  );
+
+  return {
+    message: response.data.message,
+    rule: response.data.rule,
+  };
+}
+
+export async function deleteRuleApi(
+  ruleId: number,
+): Promise<{ message: string }> {
+  const response = await axios.delete<MessageResponse>(`/api/rules/${ruleId}`);
+  return {
+    message: response.data.message,
+  };
+}
+
 export async function createDynamicUrlApi(
   ruleId: string,
 ): Promise<{ message: string; url: string }> {
@@ -108,6 +132,32 @@ export async function createDynamicUrlApi(
   return {
     message: response.data.message,
     url,
+  };
+}
+
+export async function updateDynamicUrlApi(
+  urlId: number,
+  url: string,
+): Promise<{ message: string; url: UrlItem | string }> {
+  const response = await axios.patch<CreateDynamicUrlResponse>(
+    `/api/dynamics/${urlId}`,
+    { url },
+  );
+
+  return {
+    message: response.data.message,
+    url: response.data.url,
+  };
+}
+
+export async function deleteDynamicUrlApi(
+  urlId: number,
+): Promise<{ message: string }> {
+  const response = await axios.delete<MessageResponse>(
+    `/api/dynamics/${urlId}`,
+  );
+  return {
+    message: response.data.message,
   };
 }
 

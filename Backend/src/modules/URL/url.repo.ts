@@ -54,21 +54,9 @@ async function deleteDynamicUrlById(userId: number, urlId: number) {
   return deleted[0] ?? null;
 }
 
-async function deleteUrlsByRuleId(userId: number, ruleId: number) {
-  return db
-    .delete(urlTable)
-    .where(and(eq(urlTable.user_id, userId), eq(urlTable.rules_id, ruleId)));
-}
-
-async function deleteUrlsByUserId(userId: number) {
-  return db.delete(urlTable).where(eq(urlTable.user_id, userId));
-}
-
 export {
   createDynamicUrl,
   getDynamicUrl,
   updateDynamicUrlById,
   deleteDynamicUrlById,
-  deleteUrlsByRuleId,
-  deleteUrlsByUserId,
 };

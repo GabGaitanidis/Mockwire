@@ -21,8 +21,10 @@ export const rulesTable = pgTable("rules", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: integer("user_id")
     .notNull()
-    .references(() => userTable.id),
-  url_id: integer("url_id").references(() => urlTable.id),
+    .references(() => userTable.id, { onDelete: "cascade" }),
+  url_id: integer("url_id").references(() => urlTable.id, {
+    onDelete: "set null",
+  }),
   endpoint: varchar({ length: 255 }).notNull(),
   dataSchema: jsonb("data_schema").$type<Record<string, string>>().notNull(),
   latency: integer().default(0).notNull(),
@@ -39,10 +41,10 @@ export const urlTable = pgTable("urls", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: integer("user_id")
     .notNull()
-    .references(() => userTable.id),
+    .references(() => userTable.id, { onDelete: "cascade" }),
   url: varchar({ length: 255 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   rules_id: integer()
     .notNull()
-    .references(() => rulesTable.id),
+    .references(() => rulesTable.id, { onDelete: "cascade" }),
 });
