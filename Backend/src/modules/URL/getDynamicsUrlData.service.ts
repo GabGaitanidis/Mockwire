@@ -12,13 +12,13 @@ async function getDynamicsUrlDataService(params: Object) {
   if (!access) return false;
 
   const result = await getDynamicsUrlData(apiKey, normalizedEndpoint);
-  if (!result || !result.length) {
+  if (!result) {
     return null;
   }
 
-  const schema = result[0].dataSchema;
-  const latency = result[0].latency || 0;
-  const statusCodes = result[0].statusCodes;
+  const schema = result.dataSchema;
+  const latency = result.latency || 0;
+  const statusCodes = result.statusCodes;
   if (!schema || typeof schema !== "object") {
     return null;
   }

@@ -174,6 +174,7 @@ export function useDashboard() {
       const response = await fetchUrlsApi();
       setUrls(response.urls);
     } catch (err) {
+      setUrls([]);
       setError(getApiErrorMessage(err, "Failed to fetch URLs"));
     }
   }

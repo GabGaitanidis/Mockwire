@@ -24,6 +24,7 @@ async function getDynamicUrlData(req: Request, res: Response) {
   const { mockData, latency, statusCodes } = result;
 
   if (latency > 0) {
+    console.log(latency);
     await new Promise((resolve) => setTimeout(resolve, latency));
   }
 
@@ -32,7 +33,7 @@ async function getDynamicUrlData(req: Request, res: Response) {
     code: statusCode,
     message: statusMessage,
   } = pickRandomStatusCode(statusCodes);
-
+  console.log(statusCode);
   return res.status(statusCode).json({
     error,
     statusCode,

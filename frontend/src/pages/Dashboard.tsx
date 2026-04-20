@@ -15,9 +15,7 @@ const Dashboard: FC = () => {
     testResponse,
     testLoading,
     editingRuleId,
-    editingUrlId,
     setEditingRuleId,
-    setEditingUrlId,
     fieldNameInput,
     fieldTypeInput,
     fieldTypeOptions,
@@ -36,7 +34,6 @@ const Dashboard: FC = () => {
     handleDeleteRule,
     handleUpdateRule,
     handleDeleteUrl,
-    handleUpdateUrl,
     handleAddStatusCode,
     handleRemoveStatusCode,
     applyStatusCodePreset,
@@ -749,30 +746,10 @@ const Dashboard: FC = () => {
                             <button
                               onClick={async () => {
                                 if (!url.id) return;
-                                setEditingUrlId(url.id);
-                                const nextUrl = window.prompt(
-                                  "Update URL",
-                                  url.url,
-                                );
-                                if (nextUrl === null) {
-                                  setEditingUrlId(null);
-                                  return;
-                                }
-                                await handleUpdateUrl(url.id, nextUrl);
-                              }}
-                              disabled={!url.id || editingUrlId === url.id}
-                              className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200 disabled:opacity-50"
-                            >
-                              {editingUrlId === url.id ? "Updating..." : "Edit"}
-                            </button>
-                            <button
-                              onClick={async () => {
-                                if (!url.id) return;
                                 const ok = window.confirm("Delete this URL?");
                                 if (!ok) return;
                                 await handleDeleteUrl(url.id);
                               }}
-                              disabled={!url.id}
                               className="text-xs px-2 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200 disabled:opacity-50"
                             >
                               Delete

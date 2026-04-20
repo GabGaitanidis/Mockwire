@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { rulesTable, userTable } from "../../db/schema";
 import authorizeAPIKey from "../Auth/authorizeAPIKey";
@@ -14,10 +14,11 @@ async function getDynamicsUrlData(apiKey: string, endpoint: string) {
     .from(rulesTable)
     .where(
       and(eq(rulesTable.api_key, apiKey), eq(rulesTable.endpoint, endpoint)),
-    );
+    )
+    .orderBy(desc(rulesTable.id))
+    .limit(1);
 
-  if (!result.length) return false;
-  return result;
+  return result[0] ?? null;
 }
 
 export { authorizeAPIKey, getDynamicsUrlData };

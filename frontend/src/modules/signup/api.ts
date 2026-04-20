@@ -4,9 +4,6 @@ import type { SignupFormData, SignupResponse } from "./types";
 export async function signupApi(
   payload: SignupFormData,
 ): Promise<SignupResponse> {
-  const response = await axios.post<SignupResponse>(
-    "/api/auth/register",
-    payload,
-  );
+  const response = await axios.post<SignupResponse>("/auth/register", payload);
   return response.data;
 }

@@ -35,18 +35,40 @@ function normalizeUrlList(rawUrls: unknown): UrlItem[] {
   }
 
   return rawUrls
-    .map((item, index) => {
+    .map((item) => {
       if (typeof item === "string") {
-        return { id: index + 1, url: item };
+        return { url: item };
       }
 
       if (item && typeof item === "object" && "url" in item) {
-        return item as UrlItem;
+        const record = item as Record<string, unknown>;
+
+        return {
+          id:
+            typeof record.id === "number"
+              ? record.id
+              : Number.isFinite(Number(record.id))
+                ? Number(record.id)
+                : undefined,
+          url: String(record.url ?? ""),
+          createdAt:
+            typeof record.createdAt === "string"
+              ? record.createdAt
+              : typeof record.created_at === "string"
+                ? record.created_at
+                : undefined,
+          rules_id:
+            typeof record.rules_id === "number"
+              ? record.rules_id
+              : Number.isFinite(Number(record.rules_id))
+                ? Number(record.rules_id)
+                : undefined,
+        };
       }
 
       return null;
     })
-    .filter((item): item is UrlItem => Boolean(item));
+    .filter((item): item is UrlItem => Boolean(item && item.url));
 }
 
 function toBackendDynamicUrl(generatedUrl: string): string {
@@ -93,7 +115,7 @@ export async function fetchRulesApi(): Promise<{
   message: string;
   rules: Rule[];
 }> {
-  const response = await axios.get<RulesResponse>("/api/rules");
+  const response = await axios.get<RulesResponse>("/rules");
   return {
     message: response.data.message,
     rules: response.data.rules ?? [],
@@ -104,7 +126,7 @@ export async function fetchUrlsApi(): Promise<{
   message: string;
   urls: UrlItem[];
 }> {
-  const response = await axios.get<UrlsResponse>("/api/dynamics");
+  const response = await axios.get<UrlsResponse>("/dynamics");
   return {
     message: response.data.message,
     urls: normalizeUrlList(response.data.urls),
@@ -114,7 +136,7 @@ export async function fetchUrlsApi(): Promise<{
 export async function createRuleApi(
   payload: CreateRuleRequest,
 ): Promise<{ message: string; rule: Rule }> {
-  const response = await axios.post<CreateRuleResponse>("/api/rules", payload);
+  const response = await axios.post<CreateRuleResponse>("/rules", payload);
   return {
     message: response.data.message,
     rule: response.data.rule,
@@ -126,7 +148,7 @@ export async function updateRuleApi(
   payload: Partial<CreateRuleRequest>,
 ): Promise<{ message: string; rule: Rule }> {
   const response = await axios.patch<CreateRuleResponse>(
-    `/api/rules/${ruleId}`,
+    `/rules/${ruleId}`,
     payload,
   );
 
@@ -139,7 +161,7 @@ export async function updateRuleApi(
 export async function deleteRuleApi(
   ruleId: number,
 ): Promise<{ message: string }> {
-  const response = await axios.delete<MessageResponse>(`/api/rules/${ruleId}`);
+  const response = await axios.delete<MessageResponse>(`/rules/${ruleId}`);
   return {
     message: response.data.message,
   };
@@ -149,7 +171,7 @@ export async function createDynamicUrlApi(
   ruleId: string,
 ): Promise<{ message: string; url: string }> {
   const response = await axios.post<CreateDynamicUrlResponse>(
-    `/api/dynamics/${ruleId}`,
+    `/dynamics/${ruleId}`,
   );
   const urlPayload = response.data.url;
 
@@ -167,7 +189,7 @@ export async function updateDynamicUrlApi(
   url: string,
 ): Promise<{ message: string; url: UrlItem | string }> {
   const response = await axios.patch<CreateDynamicUrlResponse>(
-    `/api/dynamics/${urlId}`,
+    `/dynamics/${urlId}`,
     { url },
   );
 
@@ -180,9 +202,7 @@ export async function updateDynamicUrlApi(
 export async function deleteDynamicUrlApi(
   urlId: number,
 ): Promise<{ message: string }> {
-  const response = await axios.delete<MessageResponse>(
-    `/api/dynamics/${urlId}`,
-  );
+  const response = await axios.delete<MessageResponse>(`/dynamics/${urlId}`);
   return {
     message: response.data.message,
   };
