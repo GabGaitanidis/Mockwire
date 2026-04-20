@@ -1,24 +1,62 @@
 import { faker } from "@faker-js/faker";
 
-function dataGenerator(dataSchema: Record<string, string>) {
-  const mockData: Record<string, any> = {};
+const UNRESOLVED_PATH = Symbol("UNRESOLVED_PATH");
 
-  for (const [key, fakerPath] of Object.entries(dataSchema)) {
-    const parts = fakerPath.split(".");
+function resolveFakerPath(path: string) {
+  const parts = path.split(".");
 
-    let current: any = faker;
-    let parent: any = null;
+  let current: any = faker;
+  let parent: any = null;
 
-    for (const part of parts) {
-      parent = current;
-      current = current[part];
+  for (const part of parts) {
+    if (current == null || !(part in current)) {
+      return UNRESOLVED_PATH;
     }
 
-    if (typeof current === "function") {
-      mockData[key] = current.call(parent);
-    } else {
-      mockData[key] = current;
+    parent = current;
+    current = current[part];
+  }
+
+  if (typeof current === "function") {
+    return current.call(parent);
+  }
+
+  return current;
+}
+
+function resolveSchemaValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => resolveSchemaValue(item));
+  }
+
+  if (value && typeof value === "object") {
+    const resolvedObject: Record<string, unknown> = {};
+
+    for (const [key, nestedValue] of Object.entries(value)) {
+      resolvedObject[key] = resolveSchemaValue(nestedValue);
     }
+
+    return resolvedObject;
+  }
+
+  if (typeof value === "string") {
+    const resolved = resolveFakerPath(value);
+
+    if (resolved === UNRESOLVED_PATH) {
+      return value;
+    }
+
+    return resolved;
+  }
+
+  return value;
+}
+
+function dataGenerator(dataSchema: Record<string, unknown>) {
+  const mockData: Record<string, unknown> = {};
+
+  for (const [key, schemaValue] of Object.entries(dataSchema)) {
+    mockData[key] = resolveSchemaValue(schemaValue);
   }
 
   return mockData;
