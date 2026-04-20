@@ -11,7 +11,23 @@ import type {
   UrlsResponse,
 } from "./types";
 
-const BACKEND_BASE_URL = "http://localhost:5000";
+function getBackendBaseUrl() {
+  if (import.meta.env.PROD) {
+    return (
+      import.meta.env.VITE_API_URL_PROD ??
+      import.meta.env.VITE_API_URL ??
+      "https://api-generator-7lxt.onrender.com"
+    );
+  }
+
+  return (
+    import.meta.env.VITE_API_URL_DEV ??
+    import.meta.env.VITE_API_URL ??
+    "http://localhost:5000"
+  );
+}
+
+const BACKEND_BASE_URL = getBackendBaseUrl();
 
 function normalizeUrlList(rawUrls: unknown): UrlItem[] {
   if (!Array.isArray(rawUrls)) {
@@ -34,6 +50,14 @@ function normalizeUrlList(rawUrls: unknown): UrlItem[] {
 }
 
 function toBackendDynamicUrl(generatedUrl: string): string {
+  const configuredBackendOrigin = (() => {
+    try {
+      return new URL(BACKEND_BASE_URL).origin;
+    } catch {
+      return BACKEND_BASE_URL;
+    }
+  })();
+
   try {
     const parsed = new URL(generatedUrl);
     let pathname = parsed.pathname;
@@ -42,19 +66,22 @@ function toBackendDynamicUrl(generatedUrl: string): string {
       pathname = `/dynamics${pathname}`;
     }
 
-    return `${BACKEND_BASE_URL}${pathname}${parsed.search}`;
+    return `${parsed.origin}${pathname}${parsed.search}`;
   } catch {
     let testUrl = generatedUrl
-      .replace("https://localhost:5000", BACKEND_BASE_URL)
-      .replace("http://localhost:5000", BACKEND_BASE_URL)
-      .replace("https://localhost:3001", BACKEND_BASE_URL)
-      .replace("http://localhost:3001", BACKEND_BASE_URL)
-      .replace("https://api-generator-7lxt.onrender.com", BACKEND_BASE_URL);
+      .replace("https://localhost:5000", configuredBackendOrigin)
+      .replace("http://localhost:5000", configuredBackendOrigin)
+      .replace("https://localhost:3001", configuredBackendOrigin)
+      .replace("http://localhost:3001", configuredBackendOrigin)
+      .replace(
+        "https://api-generator-7lxt.onrender.com",
+        configuredBackendOrigin,
+      );
 
-    if (testUrl.startsWith(`${BACKEND_BASE_URL}/api/mock/`)) {
+    if (testUrl.startsWith(`${configuredBackendOrigin}/api/mock/`)) {
       testUrl = testUrl.replace(
-        `${BACKEND_BASE_URL}/api/mock/`,
-        `${BACKEND_BASE_URL}/dynamics/api/mock/`,
+        `${configuredBackendOrigin}/api/mock/`,
+        `${configuredBackendOrigin}/dynamics/api/mock/`,
       );
     }
 

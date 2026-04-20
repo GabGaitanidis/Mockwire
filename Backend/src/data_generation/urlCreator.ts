@@ -1,6 +1,14 @@
 import "dotenv/config";
 
-const API_HOST = process.env.API_HOST || "http://localhost:5000";
+function getApiHost() {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (isProduction) {
+    return process.env.API_HOST_PROD ?? process.env.API_HOST;
+  }
+
+  return process.env.API_HOST_DEV ?? process.env.API_HOST;
+}
 
 function normalizeHost(host: string): string {
   return host.endsWith("/") ? host.slice(0, -1) : host;
@@ -12,7 +20,7 @@ function normalizeEndpoint(endpoint: string): string {
 }
 
 function urlGenerator(apiKey: string, endpoint: string) {
-  const host = normalizeHost(API_HOST);
+  const host = normalizeHost(getApiHost() || "http://localhost:5000");
   const normalizedEndpoint = normalizeEndpoint(endpoint);
   const url = `${host}/dynamics/api/mock/${apiKey}${normalizedEndpoint}`;
   return url;
