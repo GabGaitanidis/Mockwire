@@ -40,6 +40,17 @@ export interface StatusCodeInput {
   message: string;
 }
 
+export interface FieldTypeOption {
+  label: string;
+  fakerPath: string;
+}
+
+export interface SchemaEntry {
+  fieldName: string;
+  fakerPath: string;
+  label: string;
+}
+
 export interface TestResponse {
   statusCode?: number;
   message?: string;

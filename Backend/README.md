@@ -50,16 +50,6 @@ Server runs at: `http://localhost:5000`
 
 - Clears auth cookies
 
-### User
-
-`POST /user`
-
-- Body: `{ name, email, password }`
-
-`GET /user`
-
-- Requires auth
-
 ### Rule
 
 `GET /rule` (auth-required)

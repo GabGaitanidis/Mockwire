@@ -19,14 +19,13 @@ async function getDynamicsUrlDataService(params: Object) {
 
   const schema = result[0].dataSchema;
   const latency = result[0].latency || 0;
-  const errorRate = result[0].errorRate || 0;
   const statusCodes = result[0].statusCodes;
   if (!schema || typeof schema !== "object") {
     return null;
   }
 
   const mockData = dataGenerator(schema);
-  return { mockData, latency, errorRate, statusCodes };
+  return { mockData, latency, statusCodes };
 }
 
 export default getDynamicsUrlDataService;

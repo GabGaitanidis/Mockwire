@@ -2,7 +2,7 @@ import { getEndpoint, bindUrlToRule } from "../Rules/rules.repo";
 import urlGenerator from "../../data_generation/urlCreator";
 import { createDynamicUrl } from "./url.repo";
 import { createUrlSchema } from "./url.validation";
-import { getUsersAPIKey } from "../User/user.repo";
+import { getUsersAPIKey } from "../Auth/auth.repo";
 import { AppError } from "../../errors/AppError";
 
 async function createDynamicUrlService(userId: number, params: Object) {

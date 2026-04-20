@@ -5,11 +5,13 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "NODE_ENV=production node dist/index.js",
     "test": "vitest",
     "test:watch": "vitest watch",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "db:push:dev": "NODE_ENV=development drizzle-kit push",
+    "db:push:prod": "NODE_ENV=production drizzle-kit push"
   },
   "keywords": [],
   "author": "",

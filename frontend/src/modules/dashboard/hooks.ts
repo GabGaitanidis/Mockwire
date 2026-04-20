@@ -13,8 +13,10 @@ import {
   updateRuleApi,
 } from "./api";
 import type {
+  FieldTypeOption,
   Rule,
   RuleFormData,
+  SchemaEntry,
   StatusCodeInput,
   StatusCodesMap,
   TestResponse,
@@ -39,6 +41,19 @@ const INITIAL_TEST_RESPONSE: TestResponse = {
   data: null,
   error: null,
 };
+
+const FIELD_TYPE_OPTIONS: FieldTypeOption[] = [
+  { label: "Full Name", fakerPath: "person.fullName" },
+  { label: "Email", fakerPath: "internet.email" },
+  { label: "Phone Number", fakerPath: "phone.number" },
+  { label: "Street Address", fakerPath: "location.streetAddress" },
+  { label: "Company Name", fakerPath: "company.name" },
+  { label: "Job Title", fakerPath: "person.jobTitle" },
+  { label: "Product Name", fakerPath: "commerce.productName" },
+  { label: "Price", fakerPath: "commerce.price" },
+  { label: "Recent Date", fakerPath: "date.recent" },
+  { label: "Random Number", fakerPath: "number.int" },
+];
 
 function getApiErrorMessage(error: unknown, fallback: string) {
   if (error instanceof AxiosError) {
@@ -65,6 +80,85 @@ export function useDashboard() {
   const [testLoading, setTestLoading] = useState(false);
   const [editingRuleId, setEditingRuleId] = useState<number | null>(null);
   const [editingUrlId, setEditingUrlId] = useState<number | null>(null);
+  const [fieldNameInput, setFieldNameInput] = useState("");
+  const [fieldTypeInput, setFieldTypeInput] = useState(
+    FIELD_TYPE_OPTIONS[0].fakerPath,
+  );
+
+  function parseSchemaToObject(): Record<string, string> {
+    if (!formData.dataSchema.trim()) {
+      return {};
+    }
+
+    const parsed = JSON.parse(formData.dataSchema);
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Schema must be a JSON object");
+    }
+
+    return parsed as Record<string, string>;
+  }
+
+  function writeSchemaObject(nextSchema: Record<string, string>) {
+    setFormData((prev) => ({
+      ...prev,
+      dataSchema: JSON.stringify(nextSchema, null, 2),
+    }));
+  }
+
+  function applySchemaTemplate(template: Record<string, string>) {
+    writeSchemaObject(template);
+    setError("");
+  }
+
+  function handleAddSchemaField() {
+    const fieldName = fieldNameInput.trim();
+
+    if (!fieldName) {
+      setError("Field name is required");
+      return;
+    }
+
+    try {
+      const schema = parseSchemaToObject();
+
+      schema[fieldName] = fieldTypeInput;
+      writeSchemaObject(schema);
+      setFieldNameInput("");
+      setError("");
+    } catch {
+      setError("Fix Data Schema JSON before adding fields");
+    }
+  }
+
+  function handleRemoveSchemaField(fieldName: string) {
+    try {
+      const schema = parseSchemaToObject();
+      delete schema[fieldName];
+      writeSchemaObject(schema);
+      setError("");
+    } catch {
+      setError("Fix Data Schema JSON before removing fields");
+    }
+  }
+
+  function getSchemaEntries(): SchemaEntry[] {
+    try {
+      const schema = parseSchemaToObject();
+
+      return Object.entries(schema).map(([name, fakerPath]) => ({
+        fieldName: name,
+        fakerPath,
+        label:
+          FIELD_TYPE_OPTIONS.find((option) => option.fakerPath === fakerPath)
+            ?.label ?? "Custom",
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  const schemaEntries = getSchemaEntries();
 
   async function fetchRules() {
     try {
@@ -333,7 +427,16 @@ export function useDashboard() {
     setEditingUrlId,
     setError,
     setMessage,
+    fieldNameInput,
+    fieldTypeInput,
+    fieldTypeOptions: FIELD_TYPE_OPTIONS,
+    schemaEntries,
+    setFieldNameInput,
+    setFieldTypeInput,
     handleChange,
+    handleAddSchemaField,
+    handleRemoveSchemaField,
+    applySchemaTemplate,
     handleSubmitRule,
     handleGenerateUrl,
     handleTestUrl,

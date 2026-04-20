@@ -4,7 +4,6 @@ import cookieParser from "cookie-parser";
 import urlRouter from "./modules/Rules/rules.route";
 import dynamicRouter from "./modules/URL/dynamic.route";
 import { notFoundHandler, errorHandler } from "./middlewares/error.middleware";
-import userRouter from "./modules/User/user.route";
 import authRouter from "./modules/Auth/auth.routes";
 
 const app = express();
@@ -25,7 +24,6 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 app.use("/auth", authRouter);
-app.use("/users", userRouter);
 app.use("/rules", urlRouter);
 app.use("/dynamics", dynamicRouter);
 app.get("/health", (req, res) => {

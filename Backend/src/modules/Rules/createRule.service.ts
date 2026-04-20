@@ -1,4 +1,4 @@
-import { getUsersAPIKey } from "../User/user.repo";
+import { getUsersAPIKey } from "../Auth/auth.repo";
 import { createRule } from "./rules.repo";
 import { validateCreateRule } from "./rule.validation";
 

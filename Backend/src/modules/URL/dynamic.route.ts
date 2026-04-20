@@ -15,6 +15,6 @@ dynamicRouter.get("/", requireAuth, checkUserId, getUrlRoute);
 dynamicRouter.post("/:ruleId", requireAuth, checkUserId, createUrlRoute);
 dynamicRouter.patch("/:id", requireAuth, checkUserId, updateUrlRoute);
 dynamicRouter.delete("/:id", requireAuth, checkUserId, deleteUrlRoute);
-dynamicRouter.get("/api/mock/:apiKey/:endpoint", getDynamicUrlData);
+dynamicRouter.get(/^\/api\/mock\/([^/]+)\/(.+)$/, getDynamicUrlData);
 
 export default dynamicRouter;

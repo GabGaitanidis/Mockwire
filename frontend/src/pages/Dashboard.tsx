@@ -18,10 +18,18 @@ const Dashboard: FC = () => {
     editingUrlId,
     setEditingRuleId,
     setEditingUrlId,
-    setFormData,
+    fieldNameInput,
+    fieldTypeInput,
+    fieldTypeOptions,
+    schemaEntries,
+    setFieldNameInput,
+    setFieldTypeInput,
     setStatusCodeInput,
     setSelectedRuleId,
     handleChange,
+    handleAddSchemaField,
+    handleRemoveSchemaField,
+    applySchemaTemplate,
     handleSubmitRule,
     handleGenerateUrl,
     handleTestUrl,
@@ -137,85 +145,88 @@ const Dashboard: FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Data Schema (JSON)
+                        Data Fields
                       </label>
                       <div className="mb-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-start gap-2">
-                          <svg
-                            className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                              clipRule="evenodd"
-                            ></path>
-                          </svg>
-                          <div className="text-sm text-blue-800">
-                            <p className="font-semibold mb-2">
-                              How to use Faker.js for mock data:
-                            </p>
-                            <p className="mb-2">
-                              Create a JSON object where each value is a Faker
-                              method. Common examples:
-                            </p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono bg-white p-2 rounded border">
-                              <div>
-                                <span className="text-gray-600">Name:</span>{" "}
-                                "person.fullName"
-                              </div>
-                              <div>
-                                <span className="text-gray-600">Email:</span>{" "}
-                                "internet.email"
-                              </div>
-                              <div>
-                                <span className="text-gray-600">Phone:</span>{" "}
-                                "phone.number"
-                              </div>
-                              <div>
-                                <span className="text-gray-600">Address:</span>{" "}
-                                "location.streetAddress"
-                              </div>
-                              <div>
-                                <span className="text-gray-600">Company:</span>{" "}
-                                "company.name"
-                              </div>
-                              <div>
-                                <span className="text-gray-600">Job:</span>{" "}
-                                "person.jobTitle"
-                              </div>
-                              <div>
-                                <span className="text-gray-600">ID:</span>{" "}
-                                "number.int"
-                              </div>
-                              <div>
-                                <span className="text-gray-600">Date:</span>{" "}
-                                "date.recent"
-                              </div>
-                            </div>
-                            <p className="mt-2 text-xs">
-                              <a
-                                href="https://fakerjs.dev/api/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 underline"
-                              >
-                                View full Faker.js documentation →
-                              </a>
-                            </p>
-                          </div>
+                        <div className="text-sm text-blue-800">
+                          <p className="font-semibold mb-1">
+                            Build your response with labels
+                          </p>
+                          <p>
+                            Choose a field name and a data type. We map it
+                            internally, so you do not need to write library
+                            paths.
+                          </p>
                         </div>
                       </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+                        <input
+                          type="text"
+                          value={fieldNameInput}
+                          onChange={(e) => setFieldNameInput(e.target.value)}
+                          className="p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                          placeholder="Field name (e.g. fullName)"
+                        />
+                        <select
+                          value={fieldTypeInput}
+                          onChange={(e) => setFieldTypeInput(e.target.value)}
+                          className="p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                        >
+                          {fieldTypeOptions.map((option) => (
+                            <option
+                              key={option.fakerPath}
+                              value={option.fakerPath}
+                            >
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={handleAddSchemaField}
+                          className="bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold"
+                        >
+                          Add field
+                        </button>
+                      </div>
+
+                      {schemaEntries.length > 0 && (
+                        <div className="mb-3 flex flex-wrap gap-2">
+                          {schemaEntries.map((entry) => (
+                            <div
+                              key={entry.fieldName}
+                              className="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center gap-2"
+                            >
+                              <span className="text-xs text-gray-700">
+                                <span className="font-semibold">
+                                  {entry.fieldName}
+                                </span>{" "}
+                                • {entry.label}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveSchemaField(entry.fieldName)
+                                }
+                                className="text-red-600 hover:text-red-800 font-bold"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       <div className="mb-3 flex flex-wrap gap-2">
                         <button
                           type="button"
                           onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              dataSchema:
-                                '{\n  "name": "person.fullName",\n  "email": "internet.email",\n  "phone": "phone.number"\n}',
-                            }))
+                            applySchemaTemplate({
+                              name: "person.fullName",
+                              email: "internet.email",
+                              phone: "phone.number",
+                            })
                           }
                           className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border transition"
                         >
@@ -224,11 +235,11 @@ const Dashboard: FC = () => {
                         <button
                           type="button"
                           onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              dataSchema:
-                                '{\n  "title": "lorem.sentence",\n  "content": "lorem.paragraph",\n  "author": "person.fullName"\n}',
-                            }))
+                            applySchemaTemplate({
+                              title: "lorem.sentence",
+                              content: "lorem.paragraph",
+                              author: "person.fullName",
+                            })
                           }
                           className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border transition"
                         >
@@ -237,11 +248,11 @@ const Dashboard: FC = () => {
                         <button
                           type="button"
                           onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              dataSchema:
-                                '{\n  "product": "commerce.productName",\n  "price": "commerce.price",\n  "category": "commerce.department"\n}',
-                            }))
+                            applySchemaTemplate({
+                              product: "commerce.productName",
+                              price: "commerce.price",
+                              category: "commerce.department",
+                            })
                           }
                           className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border transition"
                         >
@@ -250,17 +261,22 @@ const Dashboard: FC = () => {
                         <button
                           type="button"
                           onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              dataSchema:
-                                '{\n  "id": "number.int",\n  "status": "helpers.arrayElement([\'active\', \'inactive\', \'pending\'])",\n  "createdAt": "date.recent"\n}',
-                            }))
+                            applySchemaTemplate({
+                              id: "number.int",
+                              status:
+                                "helpers.arrayElement(['active', 'inactive', 'pending'])",
+                              createdAt: "date.recent",
+                            })
                           }
                           className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border transition"
                         >
                           API Response
                         </button>
                       </div>
+
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">
+                        Advanced JSON (optional)
+                      </label>
                       <textarea
                         name="dataSchema"
                         value={formData.dataSchema}
