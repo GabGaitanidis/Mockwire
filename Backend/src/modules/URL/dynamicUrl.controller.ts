@@ -27,13 +27,17 @@ async function getDynamicUrlData(req: Request, res: Response) {
     await new Promise((resolve) => setTimeout(resolve, latency));
   }
 
-  const { code: statusCode, message: statusMessage } =
-    pickRandomStatusCode(statusCodes);
+  const {
+    error,
+    code: statusCode,
+    message: statusMessage,
+  } = pickRandomStatusCode(statusCodes);
 
   return res.status(statusCode).json({
+    error,
     statusCode,
     message: statusMessage,
-    mockData,
+    latency,
     data: mockData,
   });
 }

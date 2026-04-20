@@ -7,7 +7,6 @@ import { validateDynamicApi } from "./dynamicUrl.validation";
 async function getDynamicsUrlDataService(params: Object) {
   const { apiKey, endpoint } = validateDynamicApi(params);
   const normalizedEndpoint = normalizeEndpoint(endpoint);
-
   const access = await authorizeAPIKey(apiKey, normalizedEndpoint);
 
   if (!access) return false;
@@ -23,7 +22,6 @@ async function getDynamicsUrlDataService(params: Object) {
   if (!schema || typeof schema !== "object") {
     return null;
   }
-
   const mockData = dataGenerator(schema);
   return { mockData, latency, statusCodes };
 }
