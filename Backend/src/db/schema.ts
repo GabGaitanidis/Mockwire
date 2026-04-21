@@ -25,6 +25,9 @@ export const rulesTable = pgTable("rules", {
   url_id: integer("url_id").references(() => urlTable.id, {
     onDelete: "set null",
   }),
+  project_id: integer("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
   version: varchar({ length: 255 }).notNull().default("v1"),
   endpoint: varchar({ length: 255 }).notNull(),
   dataSchema: jsonb("data_schema").$type<Record<string, string>>().notNull(),
@@ -43,9 +46,18 @@ export const urlTable = pgTable("urls", {
   user_id: integer("user_id")
     .notNull()
     .references(() => userTable.id, { onDelete: "cascade" }),
+  project_id: integer("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
   url: varchar({ length: 255 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   rules_id: integer()
     .notNull()
     .references(() => rulesTable.id, { onDelete: "cascade" }),
+});
+
+export const projects = pgTable("projects", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: integer("user_id"),
+  name: varchar({ length: 255 }).notNull().default("Project"),
 });

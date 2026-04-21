@@ -17,8 +17,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  if (!email) return;
-
   await db.delete(userTable).where(eq(userTable.email, email));
 });
 describe("POST /auth/login", () => {

@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import urlRouter from "./modules/Rules/rules.route";
 import dynamicRouter from "./modules/URL/dynamic.route";
+import projectRouter from "./modules/Project/project.routes";
 import { notFoundHandler, errorHandler } from "./middlewares/error.middleware";
 import authRouter from "./modules/Auth/auth.routes";
 
@@ -47,7 +48,9 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 app.use("/auth", authRouter);
-app.use("/rules", urlRouter);
+app.use("/projects", projectRouter);
+app.use("/projects/:projectId/rules", urlRouter);
+app.use("/projects/:projectId/urls", dynamicRouter);
 app.use("/dynamics", dynamicRouter);
 app.get("/health", (req, res) => {
   res.status(200).json({

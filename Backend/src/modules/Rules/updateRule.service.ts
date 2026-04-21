@@ -5,6 +5,7 @@ import { updateVersion } from "./updateVersion";
 
 async function updateRuleService(
   userId: number,
+  projectId: number,
   ruleId: number,
   version: string,
   body: any,
@@ -12,7 +13,7 @@ async function updateRuleService(
   const payload = validateUpdateRule(body);
   const newVersion = updateVersion(version);
 
-  const updatedRule = await updateRuleById(userId, ruleId, {
+  const updatedRule = await updateRuleById(userId, projectId, ruleId, {
     ...payload,
     version: newVersion,
   });

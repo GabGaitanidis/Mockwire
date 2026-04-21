@@ -8,7 +8,7 @@ import {
   updateRulesController,
 } from "./rules.controller";
 import checkUserId from "../../middlewares/checkUserId";
-const ruleRouter = express.Router();
+const ruleRouter = express.Router({ mergeParams: true });
 
 ruleRouter.get("/", requireAuth, checkUserId, getRulesController);
 ruleRouter.post("/", requireAuth, checkUserId, createRulesController);

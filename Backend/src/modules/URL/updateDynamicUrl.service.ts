@@ -4,6 +4,7 @@ import { updateDynamicUrlById } from "./url.repo";
 
 async function updateDynamicUrlService(
   userId: number,
+  projectId: number,
   params: object,
   body: object,
 ) {
@@ -12,6 +13,7 @@ async function updateDynamicUrlService(
 
   const updatedUrl = await updateDynamicUrlById(
     userId,
+    projectId,
     parsedParams.id,
     parsedBody.url,
   );

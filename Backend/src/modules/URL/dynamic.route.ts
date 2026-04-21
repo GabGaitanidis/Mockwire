@@ -9,7 +9,7 @@ import {
 import { getDynamicUrlData } from "./dynamicUrl.controller";
 import checkUserId from "../../middlewares/checkUserId";
 
-const dynamicRouter = express.Router();
+const dynamicRouter = express.Router({ mergeParams: true });
 
 dynamicRouter.get("/", requireAuth, checkUserId, getUrlRoute);
 dynamicRouter.post("/:ruleId", requireAuth, checkUserId, createUrlRoute);

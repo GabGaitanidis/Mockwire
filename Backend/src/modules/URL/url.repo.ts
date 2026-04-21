@@ -2,16 +2,17 @@ import { urlTable } from "../../db/schema";
 import { db } from "../../db";
 import { and, eq } from "drizzle-orm";
 
-async function getDynamicUrl(userId: number = 1) {
+async function getDynamicUrl(userId: number, projectId: number) {
   const url = await db
     .select()
     .from(urlTable)
-    .where(eq(urlTable.user_id, userId));
+    .where(and(eq(urlTable.user_id, userId), eq(urlTable.project_id, projectId)));
   return url;
 }
 
 async function createDynamicUrl(
-  userId: number = 1,
+  userId: number,
+  projectId: number,
   urlString: string,
   rulesId: number,
 ) {
@@ -19,6 +20,7 @@ async function createDynamicUrl(
     .insert(urlTable)
     .values({
       user_id: userId,
+      project_id: projectId,
       url: urlString,
       rules_id: rulesId,
     })
@@ -33,22 +35,39 @@ async function createDynamicUrl(
 
 async function updateDynamicUrlById(
   userId: number,
+  projectId: number,
   urlId: number,
   url: string,
 ) {
   const updated = await db
     .update(urlTable)
     .set({ url })
-    .where(and(eq(urlTable.user_id, userId), eq(urlTable.id, urlId)))
+    .where(
+      and(
+        eq(urlTable.user_id, userId),
+        eq(urlTable.project_id, projectId),
+        eq(urlTable.id, urlId),
+      ),
+    )
     .returning();
 
   return updated[0] ?? null;
 }
 
-async function deleteDynamicUrlById(userId: number, urlId: number) {
+async function deleteDynamicUrlById(
+  userId: number,
+  projectId: number,
+  urlId: number,
+) {
   const deleted = await db
     .delete(urlTable)
-    .where(and(eq(urlTable.user_id, userId), eq(urlTable.id, urlId)))
+    .where(
+      and(
+        eq(urlTable.user_id, userId),
+        eq(urlTable.project_id, projectId),
+        eq(urlTable.id, urlId),
+      ),
+    )
     .returning({ id: urlTable.id });
 
   return deleted[0] ?? null;

@@ -2,16 +2,19 @@ import { db } from "../../db";
 import { rulesTable } from "../../db/schema";
 import { eq, and } from "drizzle-orm"; //
 
-async function getRulesByUser(userId: number) {
+async function getRulesByUser(userId: number, projectId: number) {
   const rules = await db
     .select()
     .from(rulesTable)
-    .where(eq(rulesTable.user_id, userId));
+    .where(
+      and(eq(rulesTable.user_id, userId), eq(rulesTable.project_id, projectId)),
+    );
   return rules;
 }
 
 async function createRule(
   userId: number,
+  projectId: number,
   endpoint: string,
   dataSchema: Record<string, string>,
   apiKey: string,
@@ -20,6 +23,7 @@ async function createRule(
 ) {
   const values = {
     user_id: userId,
+    project_id: projectId,
     endpoint,
     dataSchema,
     api_key: apiKey,
@@ -31,27 +35,45 @@ async function createRule(
   return rule[0];
 }
 
-async function bindUrlToRule(ruleId: number, urlId: number) {
+async function bindUrlToRule(
+  userId: number,
+  projectId: number,
+  ruleId: number,
+  urlId: number,
+) {
   const updated = await db
     .update(rulesTable)
     .set({ url_id: urlId })
-    .where(eq(rulesTable.id, ruleId))
+    .where(
+      and(
+        eq(rulesTable.user_id, userId),
+        eq(rulesTable.project_id, projectId),
+        eq(rulesTable.id, ruleId),
+      ),
+    )
     .returning();
 
   return updated;
 }
 
-async function getEndpoint(userId: number, ruleId: number) {
+async function getEndpoint(userId: number, projectId: number, ruleId: number) {
   const data = await db
     .select({ endpoint: rulesTable.endpoint })
     .from(rulesTable)
-    .where(and(eq(rulesTable.user_id, userId), eq(rulesTable.id, ruleId)));
+    .where(
+      and(
+        eq(rulesTable.user_id, userId),
+        eq(rulesTable.project_id, projectId),
+        eq(rulesTable.id, ruleId),
+      ),
+    );
 
   return data[0]?.endpoint;
 }
 
 async function updateRuleById(
   userId: number,
+  projectId: number,
   ruleId: number,
   data: Partial<{
     version: string;
@@ -64,16 +86,32 @@ async function updateRuleById(
   const updated = await db
     .update(rulesTable)
     .set(data)
-    .where(and(eq(rulesTable.user_id, userId), eq(rulesTable.id, ruleId)))
+    .where(
+      and(
+        eq(rulesTable.user_id, userId),
+        eq(rulesTable.project_id, projectId),
+        eq(rulesTable.id, ruleId),
+      ),
+    )
     .returning();
 
   return updated[0] ?? null;
 }
 
-async function deleteRuleById(userId: number, ruleId: number) {
+async function deleteRuleById(
+  userId: number,
+  projectId: number,
+  ruleId: number,
+) {
   const deleted = await db
     .delete(rulesTable)
-    .where(and(eq(rulesTable.user_id, userId), eq(rulesTable.id, ruleId)))
+    .where(
+      and(
+        eq(rulesTable.user_id, userId),
+        eq(rulesTable.project_id, projectId),
+        eq(rulesTable.id, ruleId),
+      ),
+    )
     .returning({ id: rulesTable.id });
 
   return deleted[0] ?? null;

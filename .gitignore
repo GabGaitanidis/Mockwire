@@ -1,3 +1,2 @@
-# Ignore dependencies everywhere
 node_modules/
 **/node_modules/

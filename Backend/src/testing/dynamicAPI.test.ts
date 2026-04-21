@@ -2,10 +2,11 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import App from "../app";
 import { db } from "../db";
-import { rulesTable, userTable } from "../db/schema";
+import { projects, rulesTable, userTable } from "../db/schema";
 import { eq } from "drizzle-orm";
 
 let seededUserId: number | null = null;
+let seededProjectId: number | null = null;
 let seededApiKey = "";
 // rule setup
 beforeAll(async () => {
@@ -29,8 +30,23 @@ beforeAll(async () => {
     throw new Error("Failed to seed test user");
   }
 
+  const insertedProject = await db
+    .insert(projects)
+    .values({
+      user_id: seededUserId,
+      name: `Test Project ${Date.now()}`,
+    })
+    .returning({ id: projects.id });
+
+  seededProjectId = insertedProject[0]?.id ?? null;
+
+  if (!seededProjectId) {
+    throw new Error("Failed to seed test project");
+  }
+
   await db.insert(rulesTable).values({
     user_id: seededUserId,
+    project_id: seededProjectId,
     api_key: seededApiKey,
     endpoint: "/users",
     dataSchema: {
@@ -46,6 +62,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  if (seededProjectId) {
+    await db.delete(projects).where(eq(projects.id, seededProjectId));
+  }
+
   if (!seededUserId) {
     return;
   }
