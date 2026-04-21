@@ -1,6 +1,6 @@
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { app } from "../app";
+import App from "../app";
 import { db } from "../db";
 import { rulesTable, userTable } from "../db/schema";
 import { eq } from "drizzle-orm";
@@ -58,7 +58,7 @@ describe("GET /dynamics/api/mock/:apiKey/:endpoint", () => {
     const apiKey = "key123";
     const endpoint = "users";
 
-    const response = await request(app).get(
+    const response = await request(App).get(
       `/dynamics/api/mock/${apiKey}/${endpoint}`,
     );
 
@@ -66,7 +66,7 @@ describe("GET /dynamics/api/mock/:apiKey/:endpoint", () => {
     expect(response.body).toHaveProperty("message");
   });
   it("returns 200 when rule matches the api key and endpoint", async () => {
-    const response = await request(app).get(
+    const response = await request(App).get(
       `/dynamics/api/mock/${seededApiKey}/users`,
     );
 
@@ -78,7 +78,7 @@ describe("GET /dynamics/api/mock/:apiKey/:endpoint", () => {
     expect(response.body.data).toHaveProperty("email");
   });
   it("returns 404 when apiKey or endpoint dont match", async () => {
-    const response = await request(app).get(
+    const response = await request(App).get(
       `/dynamics/api/mock/${seededApiKey + "1"}/urs`,
     );
     expect(response.status).toBe(404);

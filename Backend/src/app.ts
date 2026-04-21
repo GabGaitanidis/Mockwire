@@ -6,7 +6,7 @@ import dynamicRouter from "./modules/URL/dynamic.route";
 import { notFoundHandler, errorHandler } from "./middlewares/error.middleware";
 import authRouter from "./modules/Auth/auth.routes";
 
-export const app = express();
+const app = express();
 
 function isAllowedOrigin(origin?: string) {
   if (!origin) return true;
