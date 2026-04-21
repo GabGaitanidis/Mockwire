@@ -17,14 +17,19 @@ export const userTable = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const projects = pgTable("projects", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: integer("user_id"),
+  name: varchar({ length: 255 }).notNull().default("Project"),
+});
+
 export const rulesTable = pgTable("rules", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: integer("user_id")
     .notNull()
     .references(() => userTable.id, { onDelete: "cascade" }),
-  url_id: integer("url_id").references(() => urlTable.id, {
-    onDelete: "set null",
-  }),
+  // Keep nullable url_id for linkage, avoid bidirectional FK cycle with urlTable.
+  url_id: integer("url_id"),
   project_id: integer("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
@@ -54,10 +59,4 @@ export const urlTable = pgTable("urls", {
   rules_id: integer()
     .notNull()
     .references(() => rulesTable.id, { onDelete: "cascade" }),
-});
-
-export const projects = pgTable("projects", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  user_id: integer("user_id"),
-  name: varchar({ length: 255 }).notNull().default("Project"),
 });
