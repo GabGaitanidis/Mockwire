@@ -5,6 +5,18 @@ const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
+if (!ACCESS_TOKEN_SECRET) {
+  throw new Error(
+    "CRITICAL: ACCESS_TOKEN_SECRET environment variable is not set. Cannot sign JWT tokens.",
+  );
+}
+
+if (!REFRESH_TOKEN_SECRET) {
+  throw new Error(
+    "CRITICAL: REFRESH_TOKEN_SECRET environment variable is not set. Cannot sign JWT tokens.",
+  );
+}
+
 export type AccessTokenPayload = {
   sub: string;
   email: string;
