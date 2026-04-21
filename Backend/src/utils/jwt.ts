@@ -1,21 +1,20 @@
 import jwt from "jsonwebtoken";
 import "dotenv/config";
 
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+function requireEnv(name: string): string {
+  const value = process.env[name];
 
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+  if (!value) {
+    throw new Error(
+      `CRITICAL: ${name} environment variable is not set. Cannot sign JWT tokens.`,
+    );
+  }
 
-if (!ACCESS_TOKEN_SECRET) {
-  throw new Error(
-    "CRITICAL: ACCESS_TOKEN_SECRET environment variable is not set. Cannot sign JWT tokens.",
-  );
+  return value;
 }
 
-if (!REFRESH_TOKEN_SECRET) {
-  throw new Error(
-    "CRITICAL: REFRESH_TOKEN_SECRET environment variable is not set. Cannot sign JWT tokens.",
-  );
-}
+const ACCESS_TOKEN_SECRET: string = requireEnv("ACCESS_TOKEN_SECRET");
+const REFRESH_TOKEN_SECRET: string = requireEnv("REFRESH_TOKEN_SECRET");
 
 export type AccessTokenPayload = {
   sub: string;
