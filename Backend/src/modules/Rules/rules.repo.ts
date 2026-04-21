@@ -3,11 +3,11 @@ import { rulesTable } from "../../db/schema";
 import { eq, and } from "drizzle-orm"; //
 
 async function getRulesByUser(userId: number) {
-  const urls = await db
+  const rules = await db
     .select()
     .from(rulesTable)
     .where(eq(rulesTable.user_id, userId));
-  return urls;
+  return rules;
 }
 
 async function createRule(

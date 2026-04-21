@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import dataGenerator from "./dataGenerator";
+import dataGenerator from "../data_generation/dataGenerator";
 
 describe("dataGenerator", () => {
   test("generates attributes based on faker schema map", () => {

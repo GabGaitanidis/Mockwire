@@ -22,7 +22,7 @@ function normalizeEndpoint(endpoint: string): string {
 function urlGenerator(apiKey: string, endpoint: string) {
   const host = normalizeHost(getApiHost() || "http://localhost:5000");
   const normalizedEndpoint = normalizeEndpoint(endpoint);
-  const url = `${host}/dynamics/api/mock/${apiKey}${normalizedEndpoint}`;
+  const url = `${host}/api/mock/${apiKey}${normalizedEndpoint}`;
   return url;
 }
 
