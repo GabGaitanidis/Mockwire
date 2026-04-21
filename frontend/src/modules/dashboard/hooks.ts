@@ -2,18 +2,21 @@ import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { AxiosError } from "axios";
 import {
+  createProjectApi,
   createDynamicUrlApi,
   createRuleApi,
   deleteDynamicUrlApi,
   deleteRuleApi,
-  fetchRulesApi,
-  fetchUrlsApi,
+  fetchProjectsApi,
+  fetchRulesApiByProject,
+  fetchUrlsApiByProject,
   testDynamicUrlApi,
   updateDynamicUrlApi,
   updateRuleApi,
 } from "./api";
 import type {
   FieldTypeOption,
+  Project,
   Rule,
   RuleFormData,
   SchemaEntry,
@@ -63,6 +66,7 @@ function getApiErrorMessage(error: unknown, fallback: string) {
 }
 
 export function useDashboard() {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [rules, setRules] = useState<Rule[]>([]);
   const [urls, setUrls] = useState<UrlItem[]>([]);
   const [formData, setFormData] = useState<RuleFormData>(INITIAL_FORM_DATA);
@@ -71,6 +75,7 @@ export function useDashboard() {
   );
   const [selectedRuleId, setSelectedRuleId] = useState("");
   const [generatedUrl, setGeneratedUrl] = useState("");
+  const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -160,23 +165,37 @@ export function useDashboard() {
 
   const schemaEntries = getSchemaEntries();
 
-  async function fetchRules() {
+  async function fetchRules(projectId: number) {
     try {
-      const response = await fetchRulesApi();
+      const response = await fetchRulesApiByProject(projectId);
       setRules(response.rules);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to fetch rules"));
     }
   }
 
-  async function fetchUrls() {
+  async function fetchUrls(projectId: number) {
     try {
-      const response = await fetchUrlsApi();
+      const response = await fetchUrlsApiByProject(projectId);
       setUrls(response.urls);
     } catch (err) {
       setUrls([]);
       setError(getApiErrorMessage(err, "Failed to fetch URLs"));
     }
+  }
+
+  async function initializeProjects() {
+    const fetchedProjects = await fetchProjectsApi();
+
+    if (fetchedProjects.length > 0) {
+      setProjects(fetchedProjects);
+      return fetchedProjects[0].id;
+    }
+
+    const created = await createProjectApi("Default Project");
+    const nextProjects = [created];
+    setProjects(nextProjects);
+    return created.id;
   }
 
   useEffect(() => {
@@ -189,13 +208,56 @@ export function useDashboard() {
     try {
       const parsedUser = JSON.parse(storedUser) as User;
       setUser(parsedUser);
-      fetchRules();
-      fetchUrls();
+
+      (async () => {
+        try {
+          const projectId = await initializeProjects();
+          setActiveProjectId(projectId);
+          await fetchRules(projectId);
+          await fetchUrls(projectId);
+        } catch (err) {
+          setError(getApiErrorMessage(err, "Failed to initialize project"));
+        }
+      })();
     } catch {
       localStorage.removeItem("user");
       localStorage.removeItem("apiKey");
     }
   }, []);
+
+  async function handleSelectProject(projectId: number) {
+    if (!projectId || Number.isNaN(projectId)) {
+      return;
+    }
+
+    setActiveProjectId(projectId);
+    setSelectedRuleId("");
+    setGeneratedUrl("");
+    setTestResponse(INITIAL_TEST_RESPONSE);
+
+    await fetchRules(projectId);
+    await fetchUrls(projectId);
+  }
+
+  async function handleCreateProject(name: string) {
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      setError("Project name is required");
+      return;
+    }
+
+    try {
+      const created = await createProjectApi(trimmedName);
+      const nextProjects = [...projects, created];
+      setProjects(nextProjects);
+      setMessage("Project created successfully");
+      setError("");
+      await handleSelectProject(created.id);
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to create project"));
+    }
+  }
 
   function handleChange(
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -216,6 +278,11 @@ export function useDashboard() {
       return;
     }
 
+    if (!activeProjectId) {
+      setError("No project selected");
+      return;
+    }
+
     try {
       const dataSchema = JSON.parse(formData.dataSchema);
       const totalWeight = Object.values(formData.statusCodes).reduce(
@@ -228,7 +295,7 @@ export function useDashboard() {
         return;
       }
 
-      const response = await createRuleApi({
+      const response = await createRuleApi(activeProjectId, {
         endpoint: formData.endpoint,
         dataSchema,
         latency: formData.latency,
@@ -237,7 +304,7 @@ export function useDashboard() {
 
       setMessage(response.message);
       setError("");
-      await fetchRules();
+      await fetchRules(activeProjectId);
       setFormData(INITIAL_FORM_DATA);
       setStatusCodeInput(INITIAL_STATUS_CODE_INPUT);
     } catch (err) {
@@ -246,16 +313,19 @@ export function useDashboard() {
   }
 
   async function handleGenerateUrl() {
-    if (!user || !selectedRuleId) {
+    if (!user || !selectedRuleId || !activeProjectId) {
       return;
     }
 
     try {
-      const response = await createDynamicUrlApi(selectedRuleId);
+      const response = await createDynamicUrlApi(
+        activeProjectId,
+        selectedRuleId,
+      );
       setGeneratedUrl(response.url);
       setMessage(response.message);
       setTestResponse(INITIAL_TEST_RESPONSE);
-      await fetchUrls();
+      await fetchUrls(activeProjectId);
       setError("");
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to generate URL"));
@@ -263,12 +333,17 @@ export function useDashboard() {
   }
 
   async function handleDeleteRule(ruleId: number) {
+    if (!activeProjectId) {
+      setError("No project selected");
+      return;
+    }
+
     try {
-      const response = await deleteRuleApi(ruleId);
+      const response = await deleteRuleApi(activeProjectId, ruleId);
       setMessage(response.message);
       setError("");
-      await fetchRules();
-      await fetchUrls();
+      await fetchRules(activeProjectId);
+      await fetchUrls(activeProjectId);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to delete rule"));
     }
@@ -279,6 +354,11 @@ export function useDashboard() {
     version: string,
     payload: Partial<RuleFormData>,
   ) {
+    if (!activeProjectId) {
+      setError("No project selected");
+      return;
+    }
+
     try {
       const requestPayload: Partial<{
         endpoint: string;
@@ -303,39 +383,54 @@ export function useDashboard() {
         requestPayload.dataSchema = JSON.parse(payload.dataSchema);
       }
 
-      const response = await updateRuleApi(ruleId, version, requestPayload);
+      const response = await updateRuleApi(
+        activeProjectId,
+        ruleId,
+        version,
+        requestPayload,
+      );
       setMessage(response.message);
       setError("");
       setEditingRuleId(null);
-      await fetchRules();
+      await fetchRules(activeProjectId);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to update rule"));
     }
   }
 
   async function handleDeleteUrl(urlId?: number) {
+    if (!activeProjectId) {
+      setError("No project selected");
+      return;
+    }
+
     if (!urlId) {
       setError("Cannot delete URL without id");
       return;
     }
 
     try {
-      const response = await deleteDynamicUrlApi(urlId);
+      const response = await deleteDynamicUrlApi(activeProjectId, urlId);
       setMessage(response.message);
       setError("");
-      await fetchUrls();
+      await fetchUrls(activeProjectId);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to delete URL"));
     }
   }
 
   async function handleUpdateUrl(urlId: number, url: string) {
+    if (!activeProjectId) {
+      setError("No project selected");
+      return;
+    }
+
     try {
-      const response = await updateDynamicUrlApi(urlId, url);
+      const response = await updateDynamicUrlApi(activeProjectId, urlId, url);
       setMessage(response.message);
       setError("");
       setEditingUrlId(null);
-      await fetchUrls();
+      await fetchUrls(activeProjectId);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to update URL"));
     }
@@ -409,6 +504,8 @@ export function useDashboard() {
   }
 
   return {
+    projects,
+    activeProjectId,
     rules,
     urls,
     formData,
@@ -425,6 +522,7 @@ export function useDashboard() {
     setFormData,
     setStatusCodeInput,
     setSelectedRuleId,
+    setActiveProjectId,
     setEditingRuleId,
     setEditingUrlId,
     setError,
@@ -439,6 +537,8 @@ export function useDashboard() {
     handleAddSchemaField,
     handleRemoveSchemaField,
     applySchemaTemplate,
+    handleSelectProject,
+    handleCreateProject,
     handleSubmitRule,
     handleGenerateUrl,
     handleTestUrl,

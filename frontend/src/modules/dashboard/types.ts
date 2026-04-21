@@ -28,6 +28,11 @@ export interface User {
   api_key: string;
 }
 
+export interface Project {
+  id: number;
+  name: string;
+}
+
 export interface RuleFormData {
   endpoint: string;
   dataSchema: string;

@@ -5,6 +5,7 @@ import type {
   CreateRuleRequest,
   CreateRuleResponse,
   MessageResponse,
+  Project,
   Rule,
   RulesResponse,
   UrlItem,
@@ -111,32 +112,62 @@ function toBackendDynamicUrl(generatedUrl: string): string {
   }
 }
 
-export async function fetchRulesApi(): Promise<{
+export async function fetchRulesApi(projectId: number): Promise<{
   message: string;
   rules: Rule[];
 }> {
-  const response = await axios.get<RulesResponse>("/rules");
+  return fetchRulesApiByProject(projectId);
+}
+
+export async function fetchProjectsApi(): Promise<Project[]> {
+  const response = await axios.get<Project[]>("/projects");
+  return Array.isArray(response.data) ? response.data : [];
+}
+
+export async function createProjectApi(name: string): Promise<Project> {
+  const response = await axios.post<Project>("/projects", { name });
+  return response.data;
+}
+
+export async function fetchRulesApiByProject(projectId: number): Promise<{
+  message: string;
+  rules: Rule[];
+}> {
+  const response = await axios.get<RulesResponse>(
+    `/projects/${projectId}/rules`,
+  );
   return {
     message: response.data.message,
     rules: response.data.rules ?? [],
   };
 }
 
-export async function fetchUrlsApi(): Promise<{
+export async function fetchUrlsApiByProject(projectId: number): Promise<{
   message: string;
   urls: UrlItem[];
 }> {
-  const response = await axios.get<UrlsResponse>("/dynamics");
+  const response = await axios.get<UrlsResponse>(`/projects/${projectId}/urls`);
   return {
     message: response.data.message,
     urls: normalizeUrlList(response.data.urls),
   };
 }
 
+export async function fetchUrlsApi(projectId: number): Promise<{
+  message: string;
+  urls: UrlItem[];
+}> {
+  return fetchUrlsApiByProject(projectId);
+}
+
 export async function createRuleApi(
+  projectId: number,
   payload: CreateRuleRequest,
 ): Promise<{ message: string; rule: Rule }> {
-  const response = await axios.post<CreateRuleResponse>("/rules", payload);
+  const response = await axios.post<CreateRuleResponse>(
+    `/projects/${projectId}/rules`,
+    payload,
+  );
   return {
     message: response.data.message,
     rule: response.data.rule,
@@ -144,12 +175,13 @@ export async function createRuleApi(
 }
 
 export async function updateRuleApi(
+  projectId: number,
   ruleId: number,
   version: string,
   payload: Partial<CreateRuleRequest>,
 ): Promise<{ message: string; rule: Rule }> {
   const response = await axios.patch<CreateRuleResponse>(
-    `/rules/${encodeURIComponent(version)}/${ruleId}`,
+    `/projects/${projectId}/rules/${encodeURIComponent(version)}/${ruleId}`,
     payload,
   );
 
@@ -160,19 +192,23 @@ export async function updateRuleApi(
 }
 
 export async function deleteRuleApi(
+  projectId: number,
   ruleId: number,
 ): Promise<{ message: string }> {
-  const response = await axios.delete<MessageResponse>(`/rules/${ruleId}`);
+  const response = await axios.delete<MessageResponse>(
+    `/projects/${projectId}/rules/${ruleId}`,
+  );
   return {
     message: response.data.message,
   };
 }
 
 export async function createDynamicUrlApi(
+  projectId: number,
   ruleId: string,
 ): Promise<{ message: string; url: string }> {
   const response = await axios.post<CreateDynamicUrlResponse>(
-    `/dynamics/${ruleId}`,
+    `/projects/${projectId}/urls/${ruleId}`,
   );
   const urlPayload = response.data.url;
 
@@ -186,11 +222,12 @@ export async function createDynamicUrlApi(
 }
 
 export async function updateDynamicUrlApi(
+  projectId: number,
   urlId: number,
   url: string,
 ): Promise<{ message: string; url: UrlItem | string }> {
   const response = await axios.patch<CreateDynamicUrlResponse>(
-    `/dynamics/${urlId}`,
+    `/projects/${projectId}/urls/${urlId}`,
     { url },
   );
 
@@ -201,9 +238,12 @@ export async function updateDynamicUrlApi(
 }
 
 export async function deleteDynamicUrlApi(
+  projectId: number,
   urlId: number,
 ): Promise<{ message: string }> {
-  const response = await axios.delete<MessageResponse>(`/dynamics/${urlId}`);
+  const response = await axios.delete<MessageResponse>(
+    `/projects/${projectId}/urls/${urlId}`,
+  );
   return {
     message: response.data.message,
   };
