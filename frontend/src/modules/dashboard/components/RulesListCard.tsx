@@ -82,6 +82,36 @@ const RulesListCard: FC<RulesListCardProps> = ({
                   </button>
                 </div>
               </div>
+
+              <p className="text-xs text-gray-600 mt-2">
+                <span className="inline-block mr-4">
+                  Version:{" "}
+                  <span className="font-mono text-indigo-600">
+                    {rule.version ?? "v1"}
+                  </span>
+                </span>
+                <span className="inline-block mr-4">
+                  Latency:{" "}
+                  <span className="font-mono text-blue-600">
+                    {rule.latency}ms
+                  </span>
+                </span>
+              </p>
+
+              {rule.statusCodes && (
+                <div className="text-xs text-gray-600 mt-2 flex flex-wrap gap-1">
+                  {Object.entries(rule.statusCodes).map(
+                    ([code, { weight, message }]) => (
+                      <span
+                        key={code}
+                        className="bg-gray-200 px-2 py-1 rounded font-mono"
+                      >
+                        {code}: {weight}% ({message})
+                      </span>
+                    ),
+                  )}
+                </div>
+              )}
             </li>
           ))}
         </ul>
