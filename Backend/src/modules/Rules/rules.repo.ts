@@ -16,7 +16,7 @@ async function createRule(
   userId: number,
   projectId: number,
   endpoint: string,
-  dataSchema: Record<string, string>,
+  dataSchema: Record<string, any>,
   apiKey: string,
   latency: number = 0,
   statusCodes: Record<string, { weight: number; message: string }>,
@@ -31,8 +31,8 @@ async function createRule(
     statusCodes,
   };
 
-  const rule = await db.insert(rulesTable).values(values).returning();
-  return rule[0];
+  const inserted = await db.insert(rulesTable).values(values).returning();
+  return Array.isArray(inserted) ? inserted[0] : inserted;
 }
 
 async function bindUrlToRule(
@@ -78,7 +78,7 @@ async function updateRuleById(
   data: Partial<{
     version: string;
     endpoint: string;
-    dataSchema: Record<string, string>;
+    dataSchema: Record<string, any>;
     latency: number;
     statusCodes: Record<string, { weight: number; message: string }>;
   }>,

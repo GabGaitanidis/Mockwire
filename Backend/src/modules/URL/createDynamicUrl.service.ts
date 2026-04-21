@@ -16,6 +16,9 @@ async function createDynamicUrlService(
   }
   const { ruleId } = validation.data;
   const apiKey = await getUsersAPIKey(userId);
+  if (!apiKey) {
+    throw new AppError("API key not found for user", 404);
+  }
   const endpoint = await getEndpoint(userId, projectId, ruleId);
 
   if (!endpoint) {

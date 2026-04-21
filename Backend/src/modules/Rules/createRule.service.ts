@@ -11,7 +11,7 @@ async function createRuleService(userId: number, projectId: number, body: any) {
     userId,
     projectId,
     endpoint,
-    dataSchema,
+    dataSchema ?? {},
     apiKey,
     latency,
     statusCodes,

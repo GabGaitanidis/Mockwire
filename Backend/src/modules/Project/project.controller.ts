@@ -9,6 +9,7 @@ export const createProject = async (
   next: NextFunction,
 ) => {
   try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
     const user_id = req.user.id;
     const { name } = createProjectSchema.parse(req.body);
     const project = await service.createProject(Number(user_id), name);
@@ -24,6 +25,7 @@ export const getProjects = async (
   next: NextFunction,
 ) => {
   try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
     const user_id = req.user.id;
     const projects = await service.getProjects(Number(user_id));
     res.json(projects);
@@ -38,6 +40,7 @@ export const getProjectById = async (
   next: NextFunction,
 ) => {
   try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
     const user_id = Number(req.user.id);
     const id = Number(req.params.projectId);
     const project = await service.getProjectById(user_id, id);
@@ -54,6 +57,7 @@ export const updateProject = async (
   next: NextFunction,
 ) => {
   try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
     const user_id = Number(req.user.id);
     const id = Number(req.params.projectId);
     const { name } = updateProjectSchema.parse(req.body);
@@ -71,6 +75,7 @@ export const deleteProject = async (
   next: NextFunction,
 ) => {
   try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
     const user_id = Number(req.user.id);
     const id = Number(req.params.projectId);
     const project = await service.deleteProject(user_id, id);
