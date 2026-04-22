@@ -53,7 +53,9 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.use(globalLimiter);
-app.use("/auth", authLimiter);
+app.use("/auth/login", authLimiter);
+app.use("/auth/register", authLimiter);
+app.use("/auth/refresh", authLimiter);
 app.use("/dynamics/api/mock", apiKeyLimiter);
 
 app.use("/auth", authRouter);

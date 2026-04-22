@@ -1,0 +1,21 @@
+{
+  "name": "api-mock-data",
+  "private": true,
+  "workspaces": [
+    "Backend",
+    "frontend"
+  ],
+  "scripts": {
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "eslint \"Backend/src/**/*.ts\"",
+    "lint:frontend": "eslint \"frontend/src/**/*.{js,jsx,ts,tsx}\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.1",
+    "eslint": "^9.25.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^15.15.0",
+    "typescript-eslint": "^8.30.1"
+  }
+}
