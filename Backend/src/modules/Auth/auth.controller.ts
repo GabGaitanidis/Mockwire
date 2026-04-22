@@ -23,6 +23,8 @@ export async function register(
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
 
+    res.setHeader("x-api-key", result.user.api_key);
+
     return res.status(201).json({
       message: "User registered successfully",
       user: result.user,
@@ -39,6 +41,8 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     const result = await loginUser({ email, password });
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    res.setHeader("x-api-key", result.user.api_key);
 
     return res.status(200).json({
       message: "Logged in successfully",

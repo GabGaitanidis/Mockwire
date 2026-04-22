@@ -6,6 +6,7 @@ import dynamicRouter from "./modules/URL/dynamic.route";
 import projectRouter from "./modules/Project/project.routes";
 import { notFoundHandler, errorHandler } from "./middlewares/error.middleware";
 import authRouter from "./modules/Auth/auth.routes";
+import { globalLimiter, apiKeyLimiter, authLimiter } from "./utils/limiters";
 
 const app = express();
 
@@ -50,6 +51,11 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
+
+app.use(globalLimiter);
+app.use("/auth", authLimiter);
+app.use("/dynamics/api/mock", apiKeyLimiter);
+
 app.use("/auth", authRouter);
 app.use("/projects", projectRouter);
 app.use("/projects/:projectId/rules", urlRouter);
