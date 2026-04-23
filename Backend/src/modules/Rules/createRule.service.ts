@@ -2,6 +2,7 @@ import { getUsersAPIKey } from "../Auth/auth.repo";
 import { createRule } from "./rules.repo";
 import { validateCreateRule } from "./rule.validation";
 import { AppError } from "../../errors/AppError";
+import normalizeEndpoint from "../../utils/normalizeEndpoint";
 
 async function createRuleService(userId: number, projectId: number, body: any) {
   const { endpoint, dataSchema, latency, statusCodes } =
@@ -11,11 +12,11 @@ async function createRuleService(userId: number, projectId: number, body: any) {
   if (!apiKey) {
     throw new AppError("API key not found for user", 404);
   }
-
+  const cleanEndpoint = normalizeEndpoint(endpoint);
   const rule = await createRule(
     userId,
     projectId,
-    endpoint,
+    cleanEndpoint,
     dataSchema ?? {},
     apiKey,
     latency,

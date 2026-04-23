@@ -91,11 +91,14 @@ describe("GET /dynamics/api/mock/:apiKey/:endpoint", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("statusCode", 200);
-    expect(response.body).toHaveProperty("version", "v1");
-    expect(response.body).toHaveProperty("data");
-    expect(response.body.data).toHaveProperty("fullName");
-    expect(response.body.data).toHaveProperty("email");
+    expect(response.body).toMatchObject({
+      statusCode: 200,
+      version: "v1",
+      data: {
+        fullName: expect.any(String),
+        email: expect.any(String),
+      },
+    });
   });
   it("returns 404 when apiKey or endpoint dont match", async () => {
     const response = await request(App).get(
