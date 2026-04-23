@@ -28,7 +28,6 @@ export const rulesTable = pgTable("rules", {
   user_id: integer("user_id")
     .notNull()
     .references(() => userTable.id, { onDelete: "cascade" }),
-  // Keep nullable url_id for linkage, avoid bidirectional FK cycle with urlTable.
   url_id: integer("url_id"),
   project_id: integer("project_id")
     .notNull()

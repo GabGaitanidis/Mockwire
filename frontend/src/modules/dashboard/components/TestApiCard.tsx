@@ -7,6 +7,7 @@ type TestApiCardProps = {
   generatedUrl: string;
   testResponse: TestResponse;
   testLoading: boolean;
+  feedback: { type: "success" | "error"; text: string } | null;
   onSelectRule: (value: string) => void;
   onGenerateUrl: () => Promise<void> | void;
   onTestUrl: () => Promise<void> | void;
@@ -18,22 +19,33 @@ const TestApiCard: FC<TestApiCardProps> = ({
   generatedUrl,
   testResponse,
   testLoading,
+  feedback,
   onSelectRule,
   onGenerateUrl,
   onTestUrl,
 }) => {
+  const codeLines = testResponse.data
+    ? JSON.stringify(testResponse.data, null, 2).split("\n")
+    : [];
+
   return (
-    <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6 min-w-0">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Test API</h2>
+    <div className="lg:col-span-2 bg-[#161b22] border border-[#30363d] rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.4)] p-6 min-w-0">
+      <h2 className="text-2xl font-bold mb-4 text-[#e6edf3]">Test API</h2>
+
+      {feedback && (
+        <div className="mb-4 rounded-md border border-[#30363d] border-l-4 border-l-[#58a6ff] bg-[#1e2128] p-3 text-sm text-[#8b949e]">
+          {feedback.text}
+        </div>
+      )}
 
       <div className="mb-6">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-[#8b949e] mb-2">
           Select Rule
         </label>
         <select
           value={selectedRuleId}
           onChange={(e) => onSelectRule(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+          className="w-full p-3 bg-[#0d1117] border border-[#30363d] rounded-md text-[#e6edf3] focus:outline-none focus:border-[#58a6ff]"
         >
           <option value="">Choose a rule</option>
           {rules.map((rule) => (
@@ -46,7 +58,7 @@ const TestApiCard: FC<TestApiCardProps> = ({
 
       <button
         onClick={onGenerateUrl}
-        className="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 mb-6"
+        className="w-full bg-[#58a6ff] text-[#0d1117] font-semibold py-3 rounded-md hover:bg-[#79c0ff] transition disabled:opacity-50 mb-6"
         disabled={!selectedRuleId}
       >
         Generate URL
@@ -54,11 +66,11 @@ const TestApiCard: FC<TestApiCardProps> = ({
 
       {generatedUrl && (
         <div className="space-y-4">
-          <div className="p-4 bg-gray-100 rounded-lg border border-gray-300 overflow-x-auto">
-            <p className="text-xs text-gray-600 mb-2 font-semibold">
+          <div className="p-4 bg-[#0d1117] rounded-md border border-[#30363d] overflow-x-auto">
+            <p className="text-xs text-[#8b949e] mb-2 font-semibold">
               Generated URL:
             </p>
-            <code className="text-sm break-words whitespace-pre-wrap font-mono text-gray-800 block w-full">
+            <code className="text-sm break-words whitespace-pre-wrap font-mono text-[#e6edf3] block w-full">
               {generatedUrl}
             </code>
           </div>
@@ -66,50 +78,67 @@ const TestApiCard: FC<TestApiCardProps> = ({
           <button
             onClick={onTestUrl}
             disabled={testLoading}
-            className="w-full bg-purple-600 text-white font-semibold py-3 rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+            className="w-full bg-[#58a6ff] text-[#0d1117] font-semibold py-3 rounded-md hover:bg-[#79c0ff] transition disabled:opacity-50"
           >
             {testLoading ? "Testing..." : "Test URL"}
           </button>
 
           {testResponse.data && (
-            <div className="p-4 bg-green-50 border border-green-300 rounded-lg">
+            <div className="p-4 bg-[#1e2128] border border-[#30363d] rounded-md">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-sm font-semibold text-green-700">
+                  <p className="text-sm font-semibold text-[#e6edf3]">
                     Success Response
                   </p>
                   {testResponse.message && (
-                    <p className="text-xs text-green-600 mt-1">
+                    <p className="text-xs text-[#8b949e] mt-1">
                       {testResponse.message}
                     </p>
                   )}
                 </div>
                 {testResponse.statusCode && (
-                  <span className="px-3 py-1 bg-green-200 text-green-800 text-sm font-bold rounded">
+                  <span className="px-3 py-1 bg-[#0d1117] border border-[#30363d] text-[#58a6ff] text-sm font-bold rounded-md">
                     {testResponse.statusCode}
                   </span>
                 )}
               </div>
 
-              <pre className="bg-white p-4 rounded overflow-auto max-h-64 text-xs font-mono text-gray-800 border border-green-200">
-                {JSON.stringify(testResponse.data, null, 2)}
-              </pre>
+              <div className="rounded-md border border-[#30363d] bg-[#0d1117] overflow-hidden">
+                <div className="border-b border-[#30363d] px-3 py-2 text-xs text-[#8b949e] font-mono">
+                  response.json
+                </div>
+                <div className="overflow-auto max-h-72 font-mono text-xs">
+                  {codeLines.map((line, index) => (
+                    <div
+                      key={`${index}-${line}`}
+                      className="grid grid-cols-[40px,1fr]"
+                    >
+                      <span className="px-2 py-1 text-right text-[#8b949e] border-r border-[#30363d] select-none">
+                        {index + 1}
+                      </span>
+                      <span className="px-3 py-1 text-[#e6edf3] whitespace-pre">
+                        {line || " "}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
           {testResponse.error && (
-            <div className="p-4 bg-red-50 border border-red-300 rounded-lg">
+            <div className="p-4 bg-[#1e2128] border border-[#30363d] border-l-4 border-l-[#58a6ff] rounded-md">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-semibold text-red-700">
+                <p className="text-sm font-semibold text-[#e6edf3]">
                   Error Response
                 </p>
                 {testResponse.statusCode && (
-                  <span className="px-3 py-1 bg-red-200 text-red-800 text-sm font-bold rounded">
+                  <span className="px-3 py-1 bg-[#0d1117] border border-[#30363d] text-[#58a6ff] text-sm font-bold rounded-md">
                     {testResponse.statusCode}
                   </span>
                 )}
               </div>
-              <p className="text-sm text-red-600 font-mono bg-white p-3 rounded border border-red-200">
+              <p className="text-sm text-[#8b949e] font-mono bg-[#0d1117] p-3 rounded-md border border-[#30363d]">
                 {testResponse.error}
               </p>
             </div>

@@ -58,6 +58,11 @@ const FIELD_TYPE_OPTIONS: FieldTypeOption[] = [
   { label: "Random Number", fakerPath: "number.int" },
 ];
 
+type SectionFeedback = {
+  type: "success" | "error";
+  text: string;
+};
+
 function getApiErrorMessage(error: unknown, fallback: string) {
   if (error instanceof AxiosError) {
     return error.response?.data?.message ?? fallback;
@@ -89,6 +94,44 @@ export function useDashboard() {
   const [fieldTypeInput, setFieldTypeInput] = useState(
     FIELD_TYPE_OPTIONS[0].fakerPath,
   );
+  const [projectFeedback, setProjectFeedback] =
+    useState<SectionFeedback | null>(null);
+  const [ruleFeedback, setRuleFeedback] = useState<SectionFeedback | null>(
+    null,
+  );
+  const [urlFeedback, setUrlFeedback] = useState<SectionFeedback | null>(null);
+
+  function clearSectionFeedback(section: "project" | "rule" | "url") {
+    if (section === "project") {
+      setProjectFeedback(null);
+      return;
+    }
+
+    if (section === "rule") {
+      setRuleFeedback(null);
+      return;
+    }
+
+    setUrlFeedback(null);
+  }
+
+  function setSectionFeedback(
+    section: "project" | "rule" | "url",
+    type: "success" | "error",
+    text: string,
+  ) {
+    if (section === "project") {
+      setProjectFeedback({ type, text });
+      return;
+    }
+
+    if (section === "rule") {
+      setRuleFeedback({ type, text });
+      return;
+    }
+
+    setUrlFeedback({ type, text });
+  }
 
   function parseSchemaToObject(): Record<string, string> {
     if (!formData.dataSchema.trim()) {
@@ -114,6 +157,7 @@ export function useDashboard() {
   function applySchemaTemplate(template: Record<string, string>) {
     writeSchemaObject(template);
     setError("");
+    clearSectionFeedback("rule");
   }
 
   function handleAddSchemaField() {
@@ -121,6 +165,7 @@ export function useDashboard() {
 
     if (!fieldName) {
       setError("Field name is required");
+      setSectionFeedback("rule", "error", "Field name is required");
       return;
     }
 
@@ -131,8 +176,14 @@ export function useDashboard() {
       writeSchemaObject(schema);
       setFieldNameInput("");
       setError("");
+      clearSectionFeedback("rule");
     } catch {
       setError("Fix Data Schema JSON before adding fields");
+      setSectionFeedback(
+        "rule",
+        "error",
+        "Fix Data Schema JSON before adding fields",
+      );
     }
   }
 
@@ -142,8 +193,14 @@ export function useDashboard() {
       delete schema[fieldName];
       writeSchemaObject(schema);
       setError("");
+      clearSectionFeedback("rule");
     } catch {
       setError("Fix Data Schema JSON before removing fields");
+      setSectionFeedback(
+        "rule",
+        "error",
+        "Fix Data Schema JSON before removing fields",
+      );
     }
   }
 
@@ -171,6 +228,11 @@ export function useDashboard() {
       setRules(response.rules);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to fetch rules"));
+      setSectionFeedback(
+        "rule",
+        "error",
+        getApiErrorMessage(err, "Failed to fetch rules"),
+      );
     }
   }
 
@@ -181,6 +243,11 @@ export function useDashboard() {
     } catch (err) {
       setUrls([]);
       setError(getApiErrorMessage(err, "Failed to fetch URLs"));
+      setSectionFeedback(
+        "url",
+        "error",
+        getApiErrorMessage(err, "Failed to fetch URLs"),
+      );
     }
   }
 
@@ -217,6 +284,11 @@ export function useDashboard() {
           await fetchUrls(projectId);
         } catch (err) {
           setError(getApiErrorMessage(err, "Failed to initialize project"));
+          setSectionFeedback(
+            "project",
+            "error",
+            getApiErrorMessage(err, "Failed to initialize project"),
+          );
         }
       })();
     } catch {
@@ -244,6 +316,7 @@ export function useDashboard() {
 
     if (!trimmedName) {
       setError("Project name is required");
+      setSectionFeedback("project", "error", "Project name is required");
       return;
     }
 
@@ -253,9 +326,15 @@ export function useDashboard() {
       setProjects(nextProjects);
       setMessage("Project created successfully");
       setError("");
+      setSectionFeedback("project", "success", "Project created successfully");
       await handleSelectProject(created.id);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to create project"));
+      setSectionFeedback(
+        "project",
+        "error",
+        getApiErrorMessage(err, "Failed to create project"),
+      );
     }
   }
 
@@ -275,11 +354,13 @@ export function useDashboard() {
 
     if (!user) {
       setError("Please login first");
+      setSectionFeedback("rule", "error", "Please login first");
       return;
     }
 
     if (!activeProjectId) {
       setError("No project selected");
+      setSectionFeedback("rule", "error", "No project selected");
       return;
     }
 
@@ -292,6 +373,11 @@ export function useDashboard() {
 
       if (totalWeight !== 100) {
         setError("Status code weights must total 100%");
+        setSectionFeedback(
+          "rule",
+          "error",
+          "Status code weights must total 100%",
+        );
         return;
       }
 
@@ -304,11 +390,17 @@ export function useDashboard() {
 
       setMessage(response.message);
       setError("");
+      setSectionFeedback("rule", "success", response.message);
       await fetchRules(activeProjectId);
       setFormData(INITIAL_FORM_DATA);
       setStatusCodeInput(INITIAL_STATUS_CODE_INPUT);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to create rule"));
+      setSectionFeedback(
+        "rule",
+        "error",
+        getApiErrorMessage(err, "Failed to create rule"),
+      );
     }
   }
 
@@ -327,14 +419,21 @@ export function useDashboard() {
       setTestResponse(INITIAL_TEST_RESPONSE);
       await fetchUrls(activeProjectId);
       setError("");
+      setSectionFeedback("url", "success", response.message);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to generate URL"));
+      setSectionFeedback(
+        "url",
+        "error",
+        getApiErrorMessage(err, "Failed to generate URL"),
+      );
     }
   }
 
   async function handleDeleteRule(ruleId: number) {
     if (!activeProjectId) {
       setError("No project selected");
+      setSectionFeedback("rule", "error", "No project selected");
       return;
     }
 
@@ -342,10 +441,16 @@ export function useDashboard() {
       const response = await deleteRuleApi(activeProjectId, ruleId);
       setMessage(response.message);
       setError("");
+      setSectionFeedback("rule", "success", response.message);
       await fetchRules(activeProjectId);
       await fetchUrls(activeProjectId);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to delete rule"));
+      setSectionFeedback(
+        "rule",
+        "error",
+        getApiErrorMessage(err, "Failed to delete rule"),
+      );
     }
   }
 
@@ -356,6 +461,7 @@ export function useDashboard() {
   ) {
     if (!activeProjectId) {
       setError("No project selected");
+      setSectionFeedback("rule", "error", "No project selected");
       return;
     }
 
@@ -392,20 +498,28 @@ export function useDashboard() {
       setMessage(response.message);
       setError("");
       setEditingRuleId(null);
+      setSectionFeedback("rule", "success", response.message);
       await fetchRules(activeProjectId);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to update rule"));
+      setSectionFeedback(
+        "rule",
+        "error",
+        getApiErrorMessage(err, "Failed to update rule"),
+      );
     }
   }
 
   async function handleDeleteUrl(urlId?: number) {
     if (!activeProjectId) {
       setError("No project selected");
+      setSectionFeedback("url", "error", "No project selected");
       return;
     }
 
     if (!urlId) {
       setError("Cannot delete URL without id");
+      setSectionFeedback("url", "error", "Cannot delete URL without id");
       return;
     }
 
@@ -413,15 +527,22 @@ export function useDashboard() {
       const response = await deleteDynamicUrlApi(activeProjectId, urlId);
       setMessage(response.message);
       setError("");
+      setSectionFeedback("url", "success", response.message);
       await fetchUrls(activeProjectId);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to delete URL"));
+      setSectionFeedback(
+        "url",
+        "error",
+        getApiErrorMessage(err, "Failed to delete URL"),
+      );
     }
   }
 
   async function handleUpdateUrl(urlId: number, url: string) {
     if (!activeProjectId) {
       setError("No project selected");
+      setSectionFeedback("url", "error", "No project selected");
       return;
     }
 
@@ -430,9 +551,15 @@ export function useDashboard() {
       setMessage(response.message);
       setError("");
       setEditingUrlId(null);
+      setSectionFeedback("url", "success", response.message);
       await fetchUrls(activeProjectId);
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to update URL"));
+      setSectionFeedback(
+        "url",
+        "error",
+        getApiErrorMessage(err, "Failed to update URL"),
+      );
     }
   }
 
@@ -471,6 +598,11 @@ export function useDashboard() {
 
     if (!code || weight <= 0 || weight > 100 || !statusMessage) {
       setError("Invalid status code, weight, or message");
+      setSectionFeedback(
+        "rule",
+        "error",
+        "Invalid status code, weight, or message",
+      );
       return;
     }
 
@@ -483,12 +615,14 @@ export function useDashboard() {
     }));
 
     setError("");
+    clearSectionFeedback("rule");
     setStatusCodeInput(INITIAL_STATUS_CODE_INPUT);
   }
 
   function handleRemoveStatusCode(code: string) {
     if (Object.keys(formData.statusCodes).length === 1) {
       setError("Must have at least one status code");
+      setSectionFeedback("rule", "error", "Must have at least one status code");
       return;
     }
 
@@ -515,6 +649,9 @@ export function useDashboard() {
     user,
     error,
     message,
+    projectFeedback,
+    ruleFeedback,
+    urlFeedback,
     testResponse,
     testLoading,
     editingRuleId,

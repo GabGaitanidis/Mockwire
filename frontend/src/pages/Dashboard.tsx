@@ -18,8 +18,9 @@ const Dashboard: FC = () => {
     selectedRuleId,
     generatedUrl,
     user,
-    error,
-    message,
+    projectFeedback,
+    ruleFeedback,
+    urlFeedback,
     testResponse,
     testLoading,
     editingRuleId,
@@ -50,7 +51,7 @@ const Dashboard: FC = () => {
   } = useDashboard();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 overflow-x-hidden">
+    <div className="min-h-screen bg-[#0d1117] text-[#e6edf3] overflow-x-hidden">
       <div className="max-w-screen-2xl mx-auto px-4">
         <DashboardHeader
           isAuthenticated={Boolean(user)}
@@ -62,23 +63,13 @@ const Dashboard: FC = () => {
         />
 
         <div className="container mx-auto px-4 py-8">
-          {message && (
-            <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-              {message}
-            </div>
-          )}
-          {error && (
-            <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-              {error}
-            </div>
-          )}
-
           {user ? (
             <div>
               <UserProjectPanel
                 user={user}
                 projects={projects}
                 activeProjectId={activeProjectId}
+                feedback={projectFeedback}
                 onSelectProject={handleSelectProject}
                 onCreateProject={handleCreateProject}
               />
@@ -91,6 +82,7 @@ const Dashboard: FC = () => {
                   fieldTypeInput={fieldTypeInput}
                   fieldTypeOptions={fieldTypeOptions}
                   schemaEntries={schemaEntries}
+                  feedback={ruleFeedback}
                   onChange={handleChange}
                   onSetFieldNameInput={setFieldNameInput}
                   onSetFieldTypeInput={setFieldTypeInput}
@@ -110,6 +102,7 @@ const Dashboard: FC = () => {
                   generatedUrl={generatedUrl}
                   testResponse={testResponse}
                   testLoading={testLoading}
+                  feedback={urlFeedback}
                   onSelectRule={setSelectedRuleId}
                   onGenerateUrl={handleGenerateUrl}
                   onTestUrl={handleTestUrl}
@@ -120,21 +113,26 @@ const Dashboard: FC = () => {
                 <RulesListCard
                   rules={rules}
                   editingRuleId={editingRuleId}
+                  feedback={ruleFeedback}
                   onSetEditingRuleId={setEditingRuleId}
                   onDeleteRule={handleDeleteRule}
                   onUpdateRule={handleUpdateRule}
                 />
-                <UrlsListCard urls={urls} onDeleteUrl={handleDeleteUrl} />
+                <UrlsListCard
+                  urls={urls}
+                  feedback={urlFeedback}
+                  onDeleteUrl={handleDeleteUrl}
+                />
               </div>
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-700 mb-4">
+              <p className="text-[#8b949e] mb-4">
                 Please log in to access the dashboard.
               </p>
               <a
                 href="/login"
-                className="text-blue-600 hover:text-blue-800 font-semibold"
+                className="text-[#58a6ff] hover:text-[#79c0ff] font-semibold"
               >
                 Go to Login
               </a>

@@ -7,7 +7,7 @@ import Signup from "./pages/Signup.tsx";
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-[#0d1117] text-[#e6edf3]">
         <Navbar />
         <Routes>
           <Route path="/" element={<Dashboard />} />

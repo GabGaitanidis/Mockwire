@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ChangeEvent, FC, FormEvent } from "react";
 import type {
   FieldTypeOption,
@@ -14,6 +15,7 @@ type RuleBuilderCardProps = {
   fieldTypeInput: string;
   fieldTypeOptions: FieldTypeOption[];
   schemaEntries: SchemaEntry[];
+  feedback: { type: "success" | "error"; text: string } | null;
   onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onSetFieldNameInput: (value: string) => void;
   onSetFieldTypeInput: (value: string) => void;
@@ -34,6 +36,7 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
   fieldTypeInput,
   fieldTypeOptions,
   schemaEntries,
+  feedback,
   onChange,
   onSetFieldNameInput,
   onSetFieldTypeInput,
@@ -46,13 +49,23 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
   onApplyStatusCodePreset,
   onSubmitRule,
 }) => {
+  const [activeTemplate, setActiveTemplate] = useState<"user" | "blog" | null>(
+    null,
+  );
+
   return (
-    <div className="lg:col-span-1 bg-white rounded-lg shadow-md p-6 min-w-0">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Create Rule</h2>
+    <div className="lg:col-span-1 bg-[#161b22] border border-[#30363d] rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.4)] p-6 min-w-0">
+      <h2 className="text-2xl font-bold mb-4 text-[#e6edf3]">Create Rule</h2>
+
+      {feedback && (
+        <div className="mb-4 rounded-md border border-[#30363d] border-l-4 border-l-[#58a6ff] bg-[#1e2128] p-3 text-sm text-[#8b949e]">
+          {feedback.text}
+        </div>
+      )}
 
       <form onSubmit={onSubmitRule} className="space-y-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-[#8b949e] mb-2">
             Endpoint
           </label>
           <input
@@ -60,14 +73,14 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
             name="endpoint"
             value={formData.endpoint}
             onChange={onChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+            className="w-full p-3 bg-[#0d1117] border border-[#30363d] rounded-md text-[#e6edf3] focus:outline-none focus:border-[#58a6ff] transition"
             placeholder="/api/users"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-[#8b949e] mb-2">
             Data Fields
           </label>
 
@@ -76,13 +89,13 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
               type="text"
               value={fieldNameInput}
               onChange={(e) => onSetFieldNameInput(e.target.value)}
-              className="p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+              className="p-2 bg-[#0d1117] border border-[#30363d] rounded-md text-sm text-[#e6edf3] focus:outline-none focus:border-[#58a6ff]"
               placeholder="Field name"
             />
             <select
               value={fieldTypeInput}
               onChange={(e) => onSetFieldTypeInput(e.target.value)}
-              className="p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+              className="p-2 bg-[#0d1117] border border-[#30363d] rounded-md text-sm text-[#e6edf3] focus:outline-none focus:border-[#58a6ff]"
             >
               {fieldTypeOptions.map((option) => (
                 <option key={option.fakerPath} value={option.fakerPath}>
@@ -93,7 +106,7 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
             <button
               type="button"
               onClick={onAddSchemaField}
-              className="bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold"
+              className="bg-[#58a6ff] text-[#0d1117] rounded-md hover:bg-[#79c0ff] transition text-sm font-semibold"
             >
               Add field
             </button>
@@ -104,16 +117,16 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
               {schemaEntries.map((entry) => (
                 <div
                   key={entry.fieldName}
-                  className="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center gap-2"
+                  className="px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded-md flex items-center gap-2"
                 >
-                  <span className="text-xs text-gray-700">
+                  <span className="text-xs text-[#e6edf3]">
                     <span className="font-semibold">{entry.fieldName}</span> •{" "}
                     {entry.label}
                   </span>
                   <button
                     type="button"
                     onClick={() => onRemoveSchemaField(entry.fieldName)}
-                    className="text-red-600 hover:text-red-800 font-bold"
+                    className="text-[#8b949e] hover:text-[#e6edf3] font-bold"
                   >
                     ×
                   </button>
@@ -122,30 +135,40 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
             </div>
           )}
 
-          <div className="mb-3 flex flex-wrap gap-2">
+          <div className="mb-3 inline-flex rounded-md border border-[#30363d] bg-[#0d1117] overflow-hidden">
             <button
               type="button"
-              onClick={() =>
+              onClick={() => {
+                setActiveTemplate("user");
                 onApplySchemaTemplate({
                   name: "person.fullName",
                   email: "internet.email",
                   phone: "phone.number",
-                })
-              }
-              className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border transition"
+                });
+              }}
+              className={`px-3 py-2 text-xs border-r border-[#30363d] transition ${
+                activeTemplate === "user"
+                  ? "bg-[#161b22] text-[#e6edf3]"
+                  : "bg-[#0d1117] text-[#8b949e] hover:text-[#e6edf3]"
+              }`}
             >
               User Profile
             </button>
             <button
               type="button"
-              onClick={() =>
+              onClick={() => {
+                setActiveTemplate("blog");
                 onApplySchemaTemplate({
                   title: "lorem.sentence",
                   content: "lorem.paragraph",
                   author: "person.fullName",
-                })
-              }
-              className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border transition"
+                });
+              }}
+              className={`px-3 py-2 text-xs transition ${
+                activeTemplate === "blog"
+                  ? "bg-[#161b22] text-[#e6edf3]"
+                  : "bg-[#0d1117] text-[#8b949e] hover:text-[#e6edf3]"
+              }`}
             >
               Blog Post
             </button>
@@ -155,14 +178,14 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
             name="dataSchema"
             value={formData.dataSchema}
             onChange={onChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition h-32 font-mono text-sm"
+            className="w-full p-3 bg-[#0d1117] border border-[#30363d] rounded-md focus:outline-none focus:border-[#58a6ff] transition h-32 font-mono text-sm text-[#e6edf3]"
             placeholder='{"name":"person.fullName"}'
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-[#8b949e] mb-2">
             Latency (ms)
           </label>
           <input
@@ -170,7 +193,7 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
             name="latency"
             value={formData.latency}
             onChange={onChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 bg-[#0d1117] border border-[#30363d] rounded-md focus:outline-none focus:border-[#58a6ff] text-[#e6edf3]"
             min="0"
             max="30000"
           />
@@ -185,7 +208,7 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
                   "200": { weight: 100, message: "OK" },
                 })
               }
-              className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border transition"
+              className="px-3 py-1 text-xs bg-[#0d1117] hover:bg-[#1e2128] text-[#8b949e] rounded-md border border-[#30363d] transition"
             >
               100% Success
             </button>
@@ -197,7 +220,7 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
                   "500": { weight: 15, message: "Server Error" },
                 })
               }
-              className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border transition"
+              className="px-3 py-1 text-xs bg-[#0d1117] hover:bg-[#1e2128] text-[#8b949e] rounded-md border border-[#30363d] transition"
             >
               85/15
             </button>
@@ -208,15 +231,15 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
               ([code, { weight, message }]) => (
                 <div
                   key={code}
-                  className="px-3 py-2 bg-blue-100 border border-blue-300 rounded-lg flex items-center gap-2"
+                  className="px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded-md flex items-center gap-2"
                 >
-                  <span className="text-xs font-mono">
+                  <span className="text-xs font-mono text-[#e6edf3]">
                     {code}: {weight}% ({message})
                   </span>
                   <button
                     type="button"
                     onClick={() => onRemoveStatusCode(code)}
-                    className="text-red-600 hover:text-red-800 font-bold"
+                    className="text-[#8b949e] hover:text-[#e6edf3] font-bold"
                   >
                     ×
                   </button>
@@ -234,7 +257,7 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
                   code: e.target.value,
                 })
               }
-              className="p-2 border border-gray-300 rounded-lg text-sm"
+              className="p-2 bg-[#0d1117] border border-[#30363d] rounded-md text-sm text-[#e6edf3]"
             >
               <option value="200">200 OK</option>
               <option value="400">400 Bad Request</option>
@@ -251,7 +274,7 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
                   weight: e.target.value,
                 })
               }
-              className="p-2 border border-gray-300 rounded-lg text-sm"
+              className="p-2 bg-[#0d1117] border border-[#30363d] rounded-md text-sm text-[#e6edf3]"
               placeholder="Weight"
               min="0"
               max="100"
@@ -265,13 +288,13 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
                   message: e.target.value,
                 })
               }
-              className="p-2 border border-gray-300 rounded-lg text-sm"
+              className="p-2 bg-[#0d1117] border border-[#30363d] rounded-md text-sm text-[#e6edf3]"
               placeholder="Message"
             />
             <button
               type="button"
               onClick={onAddStatusCode}
-              className="bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-semibold"
+              className="bg-[#58a6ff] text-[#0d1117] rounded-md hover:bg-[#79c0ff] transition text-sm font-semibold"
             >
               Add
             </button>
@@ -280,7 +303,7 @@ const RuleBuilderCard: FC<RuleBuilderCardProps> = ({
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition"
+          className="w-full bg-[#58a6ff] text-[#0d1117] font-semibold py-3 rounded-md hover:bg-[#79c0ff] transition"
         >
           Create Rule
         </button>
