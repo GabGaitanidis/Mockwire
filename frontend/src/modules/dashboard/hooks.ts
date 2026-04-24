@@ -43,6 +43,9 @@ const INITIAL_STATUS_CODE_INPUT: StatusCodeInput = {
 const INITIAL_TEST_RESPONSE: TestResponse = {
   data: null,
   error: null,
+  totalDelayMs: undefined,
+  configuredLatencyMs: undefined,
+  networkDelayMs: undefined,
 };
 
 const FIELD_TYPE_OPTIONS: FieldTypeOption[] = [
@@ -80,6 +83,7 @@ export function useDashboard() {
   );
   const [selectedRuleId, setSelectedRuleId] = useState("");
   const [generatedUrl, setGeneratedUrl] = useState("");
+  const [testUrlInput, setTestUrlInput] = useState("");
   const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState("");
@@ -305,6 +309,7 @@ export function useDashboard() {
     setActiveProjectId(projectId);
     setSelectedRuleId("");
     setGeneratedUrl("");
+    setTestUrlInput("");
     setTestResponse(INITIAL_TEST_RESPONSE);
 
     await fetchRules(projectId);
@@ -415,6 +420,7 @@ export function useDashboard() {
         selectedRuleId,
       );
       setGeneratedUrl(response.url);
+      setTestUrlInput(response.url);
       setMessage(response.message);
       setTestResponse(INITIAL_TEST_RESPONSE);
       await fetchUrls(activeProjectId);
@@ -564,27 +570,45 @@ export function useDashboard() {
   }
 
   async function handleTestUrl() {
-    if (!generatedUrl) {
+    if (!testUrlInput.trim()) {
       return;
     }
 
     setTestLoading(true);
     setTestResponse(INITIAL_TEST_RESPONSE);
 
+    const selectedRule = rules.find(
+      (rule) => String(rule.id) === selectedRuleId,
+    );
+    const configuredLatencyMs = selectedRule?.latency ?? 0;
+    const start = performance.now();
+
     try {
-      const result = await testDynamicUrlApi(generatedUrl);
+      const result = await testDynamicUrlApi(testUrlInput.trim());
+      const totalDelayMs = Math.max(0, Math.round(performance.now() - start));
+      const networkDelayMs = Math.max(0, totalDelayMs - configuredLatencyMs);
+
       setTestResponse({
         statusCode: result.statusCode,
         message: result.message,
         data: result.data,
         error: null,
+        totalDelayMs,
+        configuredLatencyMs,
+        networkDelayMs,
       });
     } catch (err) {
+      const totalDelayMs = Math.max(0, Math.round(performance.now() - start));
+      const networkDelayMs = Math.max(0, totalDelayMs - configuredLatencyMs);
+
       setTestResponse({
         statusCode:
           err instanceof AxiosError ? err.response?.status : undefined,
         data: null,
         error: getApiErrorMessage(err, "Request failed"),
+        totalDelayMs,
+        configuredLatencyMs,
+        networkDelayMs,
       });
     } finally {
       setTestLoading(false);
@@ -646,6 +670,7 @@ export function useDashboard() {
     statusCodeInput,
     selectedRuleId,
     generatedUrl,
+    testUrlInput,
     user,
     error,
     message,
@@ -659,6 +684,7 @@ export function useDashboard() {
     setFormData,
     setStatusCodeInput,
     setSelectedRuleId,
+    setTestUrlInput,
     setActiveProjectId,
     setEditingRuleId,
     setEditingUrlId,

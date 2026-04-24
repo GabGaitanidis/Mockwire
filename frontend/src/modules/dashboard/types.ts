@@ -62,6 +62,9 @@ export interface TestResponse {
   message?: string;
   data: any;
   error: string | null;
+  totalDelayMs?: number;
+  configuredLatencyMs?: number;
+  networkDelayMs?: number;
 }
 
 export interface CreateRuleRequest {

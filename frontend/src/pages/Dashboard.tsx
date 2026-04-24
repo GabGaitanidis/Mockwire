@@ -17,6 +17,7 @@ const Dashboard: FC = () => {
     statusCodeInput,
     selectedRuleId,
     generatedUrl,
+    testUrlInput,
     user,
     projectFeedback,
     ruleFeedback,
@@ -33,6 +34,7 @@ const Dashboard: FC = () => {
     setFieldTypeInput,
     setStatusCodeInput,
     setSelectedRuleId,
+    setTestUrlInput,
     handleChange,
     handleAddSchemaField,
     handleRemoveSchemaField,
@@ -53,14 +55,7 @@ const Dashboard: FC = () => {
   return (
     <div className="min-h-screen bg-[#0d1117] text-[#e6edf3] overflow-x-hidden">
       <div className="max-w-screen-2xl mx-auto px-4">
-        <DashboardHeader
-          isAuthenticated={Boolean(user)}
-          onLogout={() => {
-            localStorage.removeItem("user");
-            localStorage.removeItem("apiKey");
-            window.location.reload();
-          }}
-        />
+        <DashboardHeader />
 
         <div className="container mx-auto px-4 py-8">
           {user ? (
@@ -100,10 +95,12 @@ const Dashboard: FC = () => {
                   rules={rules}
                   selectedRuleId={selectedRuleId}
                   generatedUrl={generatedUrl}
+                  testUrlInput={testUrlInput}
                   testResponse={testResponse}
                   testLoading={testLoading}
                   feedback={urlFeedback}
                   onSelectRule={setSelectedRuleId}
+                  onChangeTestUrlInput={setTestUrlInput}
                   onGenerateUrl={handleGenerateUrl}
                   onTestUrl={handleTestUrl}
                 />

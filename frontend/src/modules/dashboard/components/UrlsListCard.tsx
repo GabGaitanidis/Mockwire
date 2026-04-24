@@ -14,7 +14,9 @@ const UrlsListCard: FC<UrlsListCardProps> = ({
 }) => {
   return (
     <div className="bg-[#161b22] border border-[#30363d] rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.4)] p-6 min-w-0 overflow-hidden">
-      <h3 className="text-xl font-bold mb-4 text-[#e6edf3]">Your URLs</h3>
+      <h3 className="text-xl font-bold mb-4 text-[#e6edf3]">
+        Generated Endpoints
+      </h3>
       {feedback && (
         <div className="mb-4 rounded-md border border-[#30363d] border-l-4 border-l-[#58a6ff] bg-[#1e2128] p-3 text-sm text-[#8b949e]">
           {feedback.text}
