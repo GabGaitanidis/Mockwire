@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import DashboardHeader from "../modules/dashboard/components/DashboardHeader";
+import ConditionSetsCard from "../modules/dashboard/components/ConditionSetsCard";
 import RuleBuilderCard from "../modules/dashboard/components/RuleBuilderCard";
 import RulesListCard from "../modules/dashboard/components/RulesListCard";
 import TestApiCard from "../modules/dashboard/components/TestApiCard";
@@ -13,6 +14,7 @@ const Dashboard: FC = () => {
     activeProjectId,
     rules,
     urls,
+    conditionSets,
     formData,
     statusCodeInput,
     selectedRuleId,
@@ -22,6 +24,7 @@ const Dashboard: FC = () => {
     projectFeedback,
     ruleFeedback,
     urlFeedback,
+    conditionFeedback,
     testResponse,
     testLoading,
     editingRuleId,
@@ -47,6 +50,9 @@ const Dashboard: FC = () => {
     handleDeleteRule,
     handleUpdateRule,
     handleDeleteUrl,
+    handleCreateConditionSet,
+    handleUpdateConditionSet,
+    handleDeleteConditionSet,
     handleAddStatusCode,
     handleRemoveStatusCode,
     applyStatusCodePreset,
@@ -121,6 +127,15 @@ const Dashboard: FC = () => {
                   onDeleteUrl={handleDeleteUrl}
                 />
               </div>
+
+              <ConditionSetsCard
+                activeProjectId={activeProjectId}
+                conditionSets={conditionSets}
+                feedback={conditionFeedback}
+                onCreateConditionSet={handleCreateConditionSet}
+                onUpdateConditionSet={handleUpdateConditionSet}
+                onDeleteConditionSet={handleDeleteConditionSet}
+              />
             </div>
           ) : (
             <div className="text-center py-12">

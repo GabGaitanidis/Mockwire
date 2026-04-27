@@ -1,5 +1,6 @@
 import dataGenerator from "../../data_generation/dataGenerator";
 import authorizeAPIKey from "../Auth/authorizeAPIKey";
+import { getConditionSets } from "../ConditionSets/condition.repo";
 import normalizeEndpoint from "../../utils/normalizeEndpoint";
 import { getDynamicsUrlData } from "./dynamicUrl.repo";
 import { validateDynamicApi } from "./dynamicUrl.validation";
@@ -23,7 +24,24 @@ async function getDynamicsUrlDataService(params: Object) {
   if (!schema || typeof schema !== "object") {
     return null;
   }
-  const mockData = dataGenerator(schema);
+
+  const conditionSets = await getConditionSets(
+    result.user_id,
+    result.project_id,
+  );
+  const combinedConditions = [
+    ...(Array.isArray(schema.conditions) ? schema.conditions : []),
+    ...conditionSets.flatMap((conditionSet) =>
+      Array.isArray(conditionSet.conditions) ? conditionSet.conditions : [],
+    ),
+  ];
+
+  const mockSchema = {
+    ...schema,
+    conditions: combinedConditions,
+  };
+
+  const mockData = dataGenerator(mockSchema);
   return { mockData, latency, statusCodes, version };
 }
 

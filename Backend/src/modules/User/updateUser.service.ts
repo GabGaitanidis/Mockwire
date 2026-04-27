@@ -1,11 +1,12 @@
 import bcrypt from "bcrypt";
 import { AppError } from "../../errors/AppError";
 import { updateUserById } from "./user.repo";
+import { validateUpdateUser } from "./user.validation";
 
 async function updateUserService(
   actor: { id: string; role: string },
   targetUserId: number,
-  body: { name?: string; email?: string; password?: string },
+  body: unknown,
 ) {
   const isOwner = Number(actor.id) === targetUserId;
   const isAdmin = actor.role === "admin";
@@ -14,22 +15,14 @@ async function updateUserService(
     throw new AppError("Forbidden", 403);
   }
 
-  const dataToUpdate: { name?: string; email?: string; password?: string } = {};
+  const parsedBody = validateUpdateUser(body);
+  const dataToUpdate: { name?: string; email?: string; password?: string } = {
+    name: parsedBody.name?.trim(),
+    email: parsedBody.email?.trim(),
+  };
 
-  if (typeof body.name === "string" && body.name.trim()) {
-    dataToUpdate.name = body.name.trim();
-  }
-
-  if (typeof body.email === "string" && body.email.trim()) {
-    dataToUpdate.email = body.email.trim();
-  }
-
-  if (typeof body.password === "string" && body.password.trim()) {
-    dataToUpdate.password = await bcrypt.hash(body.password, 10);
-  }
-
-  if (Object.keys(dataToUpdate).length === 0) {
-    throw new AppError("No valid fields provided for update", 400);
+  if (parsedBody.password) {
+    dataToUpdate.password = await bcrypt.hash(parsedBody.password, 10);
   }
 
   const updatedUser = await updateUserById(targetUserId, dataToUpdate);

@@ -16,12 +16,10 @@ import {
 
 import { sha256 } from "./auth.helpers";
 import { AppError } from "../../errors/AppError";
+import { validateLogin, validateRegister } from "./auth.validation";
 
-export async function registerUser(input: {
-  name: string;
-  email: string;
-  password: string;
-}) {
+export async function registerUser(body: unknown) {
+  const input = validateRegister(body);
   const existingUser = await findUserByEmail(input.email);
   if (existingUser) {
     throw new AppError("Email already in use", 409);
@@ -57,7 +55,8 @@ export async function registerUser(input: {
   };
 }
 
-export async function loginUser(input: { email: string; password: string }) {
+export async function loginUser(body: unknown) {
+  const input = validateLogin(body);
   const user = await findUserByEmail(input.email);
   if (!user) {
     throw new AppError("Invalid credentials", 401);
@@ -88,7 +87,21 @@ export async function loginUser(input: { email: string; password: string }) {
   };
 }
 
-export async function refreshSession(refreshToken: string) {
+function parseUserId(userId: unknown) {
+  const parsed = Number(userId);
+
+  if (!parsed || Number.isNaN(parsed)) {
+    throw new AppError("Unauthorized", 401);
+  }
+
+  return parsed;
+}
+
+export async function refreshSession(refreshToken: unknown) {
+  if (!refreshToken || typeof refreshToken !== "string") {
+    throw new AppError("Missing refresh token", 401);
+  }
+
   const payload = verifyRefreshToken(refreshToken);
 
   const user = await findUserById(Number(payload.sub));
@@ -119,8 +132,12 @@ export async function refreshSession(refreshToken: string) {
   };
 }
 
-export async function logoutUser(refreshToken?: string) {
+export async function logoutUser(refreshToken?: unknown) {
   if (!refreshToken) return;
+
+  if (typeof refreshToken !== "string") {
+    return;
+  }
 
   try {
     const payload = verifyRefreshToken(refreshToken);
@@ -128,8 +145,9 @@ export async function logoutUser(refreshToken?: string) {
   } catch {}
 }
 
-export async function getMeUser(userId: number) {
-  const user = await findPublicUserById(userId);
+export async function getMeUser(userId: unknown) {
+  const parsedUserId = parseUserId(userId);
+  const user = await findPublicUserById(parsedUserId);
   if (!user) {
     throw new AppError("User not found", 404);
   }

@@ -45,6 +45,34 @@ export const rulesTable = pgTable("rules", {
   api_key: varchar({ length: 255 }).notNull(),
 });
 
+export const conditionSetsTable = pgTable("condition_sets", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: integer("user_id")
+    .notNull()
+    .references(() => userTable.id, { onDelete: "cascade" }),
+  project_id: integer("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  name: varchar({ length: 255 }).notNull(),
+  description: varchar({ length: 255 }),
+  conditions: jsonb("conditions")
+    .$type<Array<Record<string, unknown>>>()
+    .notNull()
+    .default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const ruleConditionSetsTable = pgTable("rule_condition_sets", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  rule_id: integer("rule_id")
+    .notNull()
+    .references(() => rulesTable.id, { onDelete: "cascade" }),
+  condition_set_id: integer("condition_set_id")
+    .notNull()
+    .references(() => conditionSetsTable.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const urlTable = pgTable("urls", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: integer("user_id")

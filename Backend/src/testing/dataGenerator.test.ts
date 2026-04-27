@@ -1,8 +1,8 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import dataGenerator from "../data_generation/dataGenerator";
 
 describe("dataGenerator", () => {
-  test("generates attributes based on faker schema map", () => {
+  it("generates attributes based on faker schema map", () => {
     const data = dataGenerator({
       firstName: "person.firstName",
       email: "internet.email",
@@ -18,7 +18,7 @@ describe("dataGenerator", () => {
     expect(typeof data.city).toBe("string");
   });
 
-  test("keeps fixed values and only resolves valid faker paths", () => {
+  it("keeps fixed values and only resolves valid faker paths", () => {
     const data = dataGenerator({
       status: "active",
       count: 42,
@@ -48,5 +48,72 @@ describe("dataGenerator", () => {
     expect((data.tags as unknown[])[0]).toBe("fixed");
     expect(typeof (data.tags as unknown[])[1]).toBe("string");
     expect((data.tags as unknown[])[2]).toBe(10);
+  });
+
+  test("ignores conditions key in the output and applies matching conditions", () => {
+    const data = dataGenerator({
+      age: 21,
+      name: "person.fullName",
+      conditions: [
+        {
+          if: { age: ">= 18" },
+          then: {
+            status: "adult",
+            accessLevel: "full",
+          },
+        },
+      ],
+    });
+
+    expect(data).toMatchObject({
+      age: 21,
+      status: "adult",
+      accessLevel: "full",
+    });
+    expect(data).not.toHaveProperty("conditions");
+    expect(data).not.toHaveProperty("then");
+    expect(typeof data.name).toBe("string");
+  });
+
+  test("merges then values into the mock data object when the condition matches", () => {
+    const data = dataGenerator({
+      age: 30,
+      conditions: [
+        {
+          if: { age: ">= 18" },
+          then: {
+            role: "adult",
+            canVote: true,
+          },
+        },
+      ],
+    });
+
+    expect(data).toMatchObject({
+      age: 30,
+      role: "adult",
+      canVote: true,
+    });
+    expect(data).not.toHaveProperty("then");
+  });
+
+  test("does not apply conditions when the condition fails", () => {
+    const data = dataGenerator({
+      age: 16,
+      conditions: [
+        {
+          if: { age: ">= 18" },
+          then: {
+            status: "adult",
+          },
+        },
+      ],
+    });
+
+    expect(data).toMatchObject({
+      age: 16,
+    });
+    expect(data).not.toHaveProperty("status");
+    expect(data).not.toHaveProperty("conditions");
   });
 });

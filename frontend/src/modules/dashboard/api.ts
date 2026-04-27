@@ -1,7 +1,10 @@
 import rawAxios from "axios";
 import axios from "../../utils/axiosInstance";
 import type {
+  ConditionSetResponse,
+  ConditionSetsResponse,
   CreateDynamicUrlResponse,
+  CreateConditionSetRequest,
   CreateRuleRequest,
   CreateRuleResponse,
   MessageResponse,
@@ -10,6 +13,7 @@ import type {
   RulesResponse,
   UrlItem,
   UrlsResponse,
+  UpdateConditionSetRequest,
 } from "./types";
 
 function getBackendBaseUrl() {
@@ -158,6 +162,66 @@ export async function fetchUrlsApi(projectId: number): Promise<{
   urls: UrlItem[];
 }> {
   return fetchUrlsApiByProject(projectId);
+}
+
+export async function fetchConditionSetsApiByProject(
+  projectId: number,
+): Promise<{
+  message: string;
+  conditionSets: import("./types").ConditionSet[];
+}> {
+  const response = await axios.get<ConditionSetsResponse>(
+    `/projects/${projectId}/condition-sets`,
+  );
+
+  return {
+    message: response.data.message,
+    conditionSets: response.data.conditionSets ?? [],
+  };
+}
+
+export async function createConditionSetApi(
+  projectId: number,
+  payload: CreateConditionSetRequest,
+): Promise<{ message: string; conditionSet: import("./types").ConditionSet }> {
+  const response = await axios.post<ConditionSetResponse>(
+    `/projects/${projectId}/condition-sets`,
+    payload,
+  );
+
+  return {
+    message: response.data.message,
+    conditionSet: response.data.conditionSet,
+  };
+}
+
+export async function updateConditionSetApi(
+  projectId: number,
+  conditionSetId: number,
+  payload: UpdateConditionSetRequest,
+): Promise<{ message: string; conditionSet: import("./types").ConditionSet }> {
+  const response = await axios.patch<ConditionSetResponse>(
+    `/projects/${projectId}/condition-sets/${conditionSetId}`,
+    payload,
+  );
+
+  return {
+    message: response.data.message,
+    conditionSet: response.data.conditionSet,
+  };
+}
+
+export async function deleteConditionSetApi(
+  projectId: number,
+  conditionSetId: number,
+): Promise<{ message: string }> {
+  const response = await axios.delete<MessageResponse>(
+    `/projects/${projectId}/condition-sets/${conditionSetId}`,
+  );
+
+  return {
+    message: response.data.message,
+  };
 }
 
 export async function createRuleApi(

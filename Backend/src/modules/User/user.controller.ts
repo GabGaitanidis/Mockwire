@@ -15,11 +15,7 @@ async function getUsersController(req: Request, res: Response) {
 }
 
 async function createUserController(req: Request, res: Response) {
-  const user = await createUserService(
-    req.body.name,
-    req.body.email,
-    req.body.password,
-  );
+  const user = await createUserService(req.body);
 
   res.status(201).json({
     message: "User created successfully",

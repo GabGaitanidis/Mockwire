@@ -5,6 +5,21 @@ export interface StatusCodeRule {
 
 export type StatusCodesMap = Record<string, StatusCodeRule>;
 
+export interface ConditionBranch {
+  if: Record<string, string>;
+  then: Record<string, unknown>;
+}
+
+export interface ConditionSet {
+  id: number;
+  name: string;
+  description?: string | null;
+  conditions: ConditionBranch[];
+  createdAt?: string;
+  user_id?: number;
+  project_id?: number;
+}
+
 export interface Rule {
   id: number;
   version?: string;
@@ -74,12 +89,28 @@ export interface CreateRuleRequest {
   statusCodes: StatusCodesMap;
 }
 
+export interface CreateConditionSetRequest {
+  name: string;
+  description?: string;
+  conditions: ConditionBranch[];
+}
+
+export type UpdateConditionSetRequest = Partial<CreateConditionSetRequest>;
+
 export interface MessageResponse {
   message: string;
 }
 
 export interface RulesResponse extends MessageResponse {
   rules: Rule[];
+}
+
+export interface ConditionSetsResponse extends MessageResponse {
+  conditionSets: ConditionSet[];
+}
+
+export interface ConditionSetResponse extends MessageResponse {
+  conditionSet: ConditionSet;
 }
 
 export interface UrlsResponse extends MessageResponse {

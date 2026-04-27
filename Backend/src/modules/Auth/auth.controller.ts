@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { validateLogin, validateRegister } from "./auth.validation";
 import { setAuthCookies, clearAuthCookies } from "../../utils/authCookies";
-import { AppError } from "../../errors/AppError";
 
 import {
   registerUser,
@@ -17,9 +15,7 @@ export async function register(
   next: NextFunction,
 ) {
   try {
-    const { name, email, password } = validateRegister(req.body);
-
-    const result = await registerUser({ name, email, password });
+    const result = await registerUser(req.body);
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
 
@@ -36,9 +32,7 @@ export async function register(
 
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {
-    const { email, password } = validateLogin(req.body);
-
-    const result = await loginUser({ email, password });
+    const result = await loginUser(req.body);
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
 
@@ -55,12 +49,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 
 export async function refresh(req: Request, res: Response, next: NextFunction) {
   try {
-    const token = req.cookies?.refreshToken;
-    if (!token) {
-      throw new AppError("Missing refresh token", 401);
-    }
-
-    const result = await refreshSession(token);
+    const result = await refreshSession(req.cookies?.refreshToken);
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
 
@@ -90,11 +79,7 @@ export async function logout(req: Request, res: Response, next: NextFunction) {
 
 export async function getMe(req: Request, res: Response, next: NextFunction) {
   try {
-    if (!req.user) {
-      throw new AppError("Unauthorized", 401);
-    }
-
-    const user = await getMeUser(Number(req.user.id));
+    const user = await getMeUser(req.user?.id);
 
     return res.status(200).json({
       message: "Authenticated user",

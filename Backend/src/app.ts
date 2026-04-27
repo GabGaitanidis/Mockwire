@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import urlRouter from "./modules/Rules/rules.route";
 import dynamicRouter from "./modules/URL/dynamic.route";
 import projectRouter from "./modules/Project/project.routes";
+import conditionRouter from "./modules/ConditionSets/condition.routes";
 import { notFoundHandler, errorHandler } from "./middlewares/error.middleware";
 import authRouter from "./modules/Auth/auth.routes";
 import { globalLimiter, apiKeyLimiter, authLimiter } from "./utils/limiters";
@@ -60,6 +61,7 @@ app.use("/dynamics/api/mock", apiKeyLimiter);
 
 app.use("/auth", authRouter);
 app.use("/projects", projectRouter);
+app.use("/projects/:projectId/condition-sets", conditionRouter);
 app.use("/projects/:projectId/rules", urlRouter);
 app.use("/projects/:projectId/urls", dynamicRouter);
 app.use("/dynamics", dynamicRouter);

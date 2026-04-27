@@ -3,18 +3,24 @@ import type { ChangeEvent, FormEvent } from "react";
 import { AxiosError } from "axios";
 import {
   createProjectApi,
+  createConditionSetApi,
   createDynamicUrlApi,
   createRuleApi,
   deleteDynamicUrlApi,
+  deleteConditionSetApi,
   deleteRuleApi,
   fetchProjectsApi,
+  fetchConditionSetsApiByProject,
   fetchRulesApiByProject,
   fetchUrlsApiByProject,
   testDynamicUrlApi,
   updateDynamicUrlApi,
+  updateConditionSetApi,
   updateRuleApi,
 } from "./api";
 import type {
+  ConditionSet,
+  CreateConditionSetRequest,
   FieldTypeOption,
   Project,
   Rule,
@@ -77,6 +83,7 @@ export function useDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [rules, setRules] = useState<Rule[]>([]);
   const [urls, setUrls] = useState<UrlItem[]>([]);
+  const [conditionSets, setConditionSets] = useState<ConditionSet[]>([]);
   const [formData, setFormData] = useState<RuleFormData>(INITIAL_FORM_DATA);
   const [statusCodeInput, setStatusCodeInput] = useState<StatusCodeInput>(
     INITIAL_STATUS_CODE_INPUT,
@@ -104,8 +111,12 @@ export function useDashboard() {
     null,
   );
   const [urlFeedback, setUrlFeedback] = useState<SectionFeedback | null>(null);
+  const [conditionFeedback, setConditionFeedback] =
+    useState<SectionFeedback | null>(null);
 
-  function clearSectionFeedback(section: "project" | "rule" | "url") {
+  function clearSectionFeedback(
+    section: "project" | "rule" | "url" | "condition",
+  ) {
     if (section === "project") {
       setProjectFeedback(null);
       return;
@@ -116,11 +127,16 @@ export function useDashboard() {
       return;
     }
 
+    if (section === "condition") {
+      setConditionFeedback(null);
+      return;
+    }
+
     setUrlFeedback(null);
   }
 
   function setSectionFeedback(
-    section: "project" | "rule" | "url",
+    section: "project" | "rule" | "url" | "condition",
     type: "success" | "error",
     text: string,
   ) {
@@ -131,6 +147,11 @@ export function useDashboard() {
 
     if (section === "rule") {
       setRuleFeedback({ type, text });
+      return;
+    }
+
+    if (section === "condition") {
+      setConditionFeedback({ type, text });
       return;
     }
 
@@ -255,6 +276,21 @@ export function useDashboard() {
     }
   }
 
+  async function fetchConditionSets(projectId: number) {
+    try {
+      const response = await fetchConditionSetsApiByProject(projectId);
+      setConditionSets(response.conditionSets);
+    } catch (err) {
+      setConditionSets([]);
+      setError(getApiErrorMessage(err, "Failed to fetch condition sets"));
+      setSectionFeedback(
+        "condition",
+        "error",
+        getApiErrorMessage(err, "Failed to fetch condition sets"),
+      );
+    }
+  }
+
   async function initializeProjects() {
     const fetchedProjects = await fetchProjectsApi();
 
@@ -286,6 +322,7 @@ export function useDashboard() {
           setActiveProjectId(projectId);
           await fetchRules(projectId);
           await fetchUrls(projectId);
+          await fetchConditionSets(projectId);
         } catch (err) {
           setError(getApiErrorMessage(err, "Failed to initialize project"));
           setSectionFeedback(
@@ -314,6 +351,7 @@ export function useDashboard() {
 
     await fetchRules(projectId);
     await fetchUrls(projectId);
+    await fetchConditionSets(projectId);
   }
 
   async function handleCreateProject(name: string) {
@@ -545,6 +583,85 @@ export function useDashboard() {
     }
   }
 
+  async function handleCreateConditionSet(payload: CreateConditionSetRequest) {
+    if (!activeProjectId) {
+      setError("No project selected");
+      setSectionFeedback("condition", "error", "No project selected");
+      return;
+    }
+
+    try {
+      const response = await createConditionSetApi(activeProjectId, payload);
+      setMessage(response.message);
+      setError("");
+      setSectionFeedback("condition", "success", response.message);
+      await fetchConditionSets(activeProjectId);
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to create condition set"));
+      setSectionFeedback(
+        "condition",
+        "error",
+        getApiErrorMessage(err, "Failed to create condition set"),
+      );
+    }
+  }
+
+  async function handleUpdateConditionSet(
+    conditionSetId: number,
+    payload: Partial<CreateConditionSetRequest>,
+  ) {
+    if (!activeProjectId) {
+      setError("No project selected");
+      setSectionFeedback("condition", "error", "No project selected");
+      return;
+    }
+
+    try {
+      const response = await updateConditionSetApi(
+        activeProjectId,
+        conditionSetId,
+        payload,
+      );
+      setMessage(response.message);
+      setError("");
+      setSectionFeedback("condition", "success", response.message);
+      await fetchConditionSets(activeProjectId);
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to update condition set"));
+      setSectionFeedback(
+        "condition",
+        "error",
+        getApiErrorMessage(err, "Failed to update condition set"),
+      );
+    }
+  }
+
+  async function handleDeleteConditionSet(conditionSetId: number) {
+    if (!activeProjectId) {
+      setError("No project selected");
+      setSectionFeedback("condition", "error", "No project selected");
+      return;
+    }
+
+    try {
+      const response = await deleteConditionSetApi(
+        activeProjectId,
+        conditionSetId,
+      );
+      setMessage(response.message);
+      setError("");
+      setSectionFeedback("condition", "success", response.message);
+      await fetchConditionSets(activeProjectId);
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to delete condition set"));
+      setSectionFeedback(
+        "condition",
+        "error",
+        getApiErrorMessage(err, "Failed to delete condition set"),
+      );
+    }
+  }
+
   async function handleUpdateUrl(urlId: number, url: string) {
     if (!activeProjectId) {
       setError("No project selected");
@@ -666,6 +783,7 @@ export function useDashboard() {
     activeProjectId,
     rules,
     urls,
+    conditionSets,
     formData,
     statusCodeInput,
     selectedRuleId,
@@ -677,6 +795,7 @@ export function useDashboard() {
     projectFeedback,
     ruleFeedback,
     urlFeedback,
+    conditionFeedback,
     testResponse,
     testLoading,
     editingRuleId,
@@ -709,6 +828,9 @@ export function useDashboard() {
     handleUpdateRule,
     handleDeleteUrl,
     handleUpdateUrl,
+    handleCreateConditionSet,
+    handleUpdateConditionSet,
+    handleDeleteConditionSet,
     handleAddStatusCode,
     handleRemoveStatusCode,
     applyStatusCodePreset,
