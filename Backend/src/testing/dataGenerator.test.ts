@@ -50,7 +50,7 @@ describe("dataGenerator", () => {
     expect((data.tags as unknown[])[2]).toBe(10);
   });
 
-  test("ignores conditions key in the output and applies matching conditions", () => {
+  it("ignores conditions key in the output and applies matching conditions", () => {
     const data = dataGenerator({
       age: 21,
       name: "person.fullName",
@@ -115,5 +115,96 @@ describe("dataGenerator", () => {
     });
     expect(data).not.toHaveProperty("status");
     expect(data).not.toHaveProperty("conditions");
+  });
+  test("does not apply condition when the referenced field is missing", () => {
+    const data = dataGenerator({
+      name: "person.fullName",
+      conditions: [
+        {
+          if: { missingField: ">= 18" },
+          then: { extra: "value" },
+        },
+      ],
+    });
+    expect(data).not.toHaveProperty("extra");
+    expect(data).not.toHaveProperty("conditions");
+  });
+  test("only applies conditions that pass when multiple are present", () => {
+    const data = dataGenerator({
+      age: 15,
+      score: 90,
+      conditions: [
+        {
+          if: { age: ">= 18" },
+          then: { isAdult: true },
+        },
+        {
+          if: { score: "> 80" },
+          then: { grade: "A" },
+        },
+      ],
+    });
+    expect(data).not.toHaveProperty("isAdult");
+    expect(data).toMatchObject({ grade: "A" });
+  });
+  test("evaluates strict less-than operator correctly", () => {
+    const data = dataGenerator({
+      price: 5,
+      conditions: [
+        {
+          if: { price: "< 10" },
+          then: { label: "cheap" },
+        },
+      ],
+    });
+    expect(data).toMatchObject({ price: 5, label: "cheap" });
+  });
+  test("does not apply condition when strict less-than fails", () => {
+    const data = dataGenerator({
+      price: 15,
+      conditions: [
+        {
+          if: { price: "< 10" },
+          then: { label: "cheap" },
+        },
+      ],
+    });
+    expect(data).not.toHaveProperty("label");
+  });
+  test("evaluates equality operator == correctly", () => {
+    const data = dataGenerator({
+      status: 1,
+      conditions: [
+        {
+          if: { status: "== 1" },
+          then: { statusLabel: "active" },
+        },
+      ],
+    });
+    expect(data).toMatchObject({ statusLabel: "active" });
+  });
+  test("evaluates inequality operator != correctly", () => {
+    const data = dataGenerator({
+      role: 2,
+      conditions: [
+        {
+          if: { role: "!= 1" },
+          then: { isGuest: true },
+        },
+      ],
+    });
+    expect(data).toMatchObject({ isGuest: true });
+  });
+  test("does not apply condition when != operator fails", () => {
+    const data = dataGenerator({
+      role: 1,
+      conditions: [
+        {
+          if: { role: "!= 1" },
+          then: { isGuest: true },
+        },
+      ],
+    });
+    expect(data).not.toHaveProperty("isGuest");
   });
 });

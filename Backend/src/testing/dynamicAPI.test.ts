@@ -44,21 +44,28 @@ beforeAll(async () => {
     throw new Error("Failed to seed test project");
   }
 
-  await db.insert(rulesTable).values({
-    user_id: seededUserId,
-    project_id: seededProjectId,
-    api_key: seededApiKey,
-    endpoint: "/users",
-    dataSchema: {
-      fullName: "person.fullName",
-      email: "internet.email",
-    },
-    latency: 0,
-    version: "v1",
-    statusCodes: {
-      "200": { weight: 100, message: "OK" },
-    },
-  });
+  const insertedRule = await db
+    .insert(rulesTable)
+    .values({
+      user_id: seededUserId,
+      project_id: seededProjectId,
+      api_key: seededApiKey,
+      endpoint: "/users",
+      dataSchema: {
+        fullName: "person.fullName",
+        email: "internet.email",
+      },
+      latency: 0,
+      version: "v1",
+      statusCodes: {
+        "200": { weight: 100, message: "OK" },
+      },
+    })
+    .returning({ id: rulesTable.id });
+
+  if (!insertedRule[0]) {
+    throw new Error("Failed to seed test rule");
+  }
 });
 
 afterAll(async () => {

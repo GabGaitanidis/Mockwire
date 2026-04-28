@@ -5,21 +5,29 @@ import { userTable } from "../db/schema";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { registerUser } from "../modules/Auth/auth.service";
+import { AppError } from "../errors/AppError";
 
 let email: string;
 let password: string;
 
 beforeAll(async () => {
-  email = `test-${Date.now()}@example.com`;
+  email = `test-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
   password = `password`;
   const name = `name-${Date.now()}`;
-  await registerUser({ name, email, password });
+  await db.delete(userTable).where(eq(userTable.email, email));
+  try {
+    await registerUser({ name, email, password });
+  } catch (error: any) {
+    if (error?.status !== 409) {
+      throw error;
+    }
+  }
 });
 
 afterAll(async () => {
   await db.delete(userTable).where(eq(userTable.email, email));
 });
-describe("POST /auth/login", () => {
+describe("Auth checks", () => {
   it("Returns 200 when logged in", async () => {
     const response = await request(app)
       .post("/auth/login")
@@ -50,5 +58,11 @@ describe("POST /auth/login", () => {
   it("Returns 400 on missing fields", async () => {
     const response = await request(app).post("/auth/login").send({ email });
     expect(response.status).toBe(400);
+  });
+  it("returns 409 for existing email", async () => {
+    const response = await request(app)
+      .post("/auth/register")
+      .send({ name: "test", email, password: "password123" });
+    expect(response.status).toBe(409);
   });
 });

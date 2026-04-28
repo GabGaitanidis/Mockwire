@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, test } from "vitest";
 import { projects, userTable, rulesTable } from "../db/schema";
 import { db } from "../db";
 import { getRulesByUser } from "../modules/Rules/rules.repo";
@@ -23,8 +23,18 @@ beforeAll(async () => {
       role: "member",
     })
     .returning({ id: userTable.id });
-
+  const insertedUser2 = await db
+    .insert(userTable)
+    .values({
+      name: "Test User2",
+      email: email + "a",
+      password: "password",
+      api_key: seededApiKey + "1",
+      role: "member",
+    })
+    .returning({ id: userTable.id });
   seededUserId = insertedUser[0]?.id ?? null;
+  seededUserId2 = insertedUser2[0]?.id ?? null;
   if (!seededUserId) {
     throw new Error("Failed to seed test user");
   }
@@ -87,5 +97,23 @@ describe("Rule creation", () => {
     };
     const result = await createRuleService(seededUserId, seededProjectId, body);
     expect(result.rule.project_id).toBe(seededProjectId);
+  });
+  test("User #1 cant access rules from user #2", async () => {
+    const body = {
+      endpoint: "/users",
+      dataSchema: {
+        fullName: "person.fullName",
+        email: "internet.email",
+      },
+      latency: 0,
+      version: "v1",
+      statusCodes: {
+        "200": { weight: 100, message: "OK" },
+      },
+    };
+    await createRuleService(seededUserId, seededProjectId, body);
+    const rules1 = getRulesByUser(seededUserId, seededProjectId);
+    const rules2 = getRulesByUser(seededUserId2, seededProjectId);
+    expect(rules2 == rules1).toBe(false);
   });
 });

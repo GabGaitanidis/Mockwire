@@ -7,4 +7,8 @@ describe("API Key Generator", () => {
     expect(key).length(64);
     expect(typeof key).toBe("string");
   });
+  test("generates unique keys on successive calls", () => {
+    const keys = new Set(Array.from({ length: 10 }, () => generateApiKey()));
+    expect(keys.size).toBe(10);
+  });
 });
