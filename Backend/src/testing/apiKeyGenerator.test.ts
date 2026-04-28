@@ -7,4 +7,14 @@ describe("API Key Generator", () => {
     expect(key).length(64);
     expect(typeof key).toBe("string");
   });
+
+  test("generated key contains only lowercase hexadecimal characters", () => {
+    const key = generateApiKey();
+    expect(key).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  test("generates unique keys on successive calls", () => {
+    const keys = new Set(Array.from({ length: 10 }, () => generateApiKey()));
+    expect(keys.size).toBe(10);
+  });
 });

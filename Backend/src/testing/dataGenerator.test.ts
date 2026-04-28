@@ -116,4 +116,149 @@ describe("dataGenerator", () => {
     expect(data).not.toHaveProperty("status");
     expect(data).not.toHaveProperty("conditions");
   });
+
+  test("applies multiple matching conditions and merges all their then values", () => {
+    const data = dataGenerator({
+      age: 25,
+      score: 90,
+      conditions: [
+        {
+          if: { age: ">= 18" },
+          then: { isAdult: true },
+        },
+        {
+          if: { score: "> 80" },
+          then: { grade: "A" },
+        },
+      ],
+    });
+
+    expect(data).toMatchObject({ age: 25, score: 90, isAdult: true, grade: "A" });
+    expect(data).not.toHaveProperty("conditions");
+  });
+
+  test("only applies conditions that pass when multiple are present", () => {
+    const data = dataGenerator({
+      age: 15,
+      score: 90,
+      conditions: [
+        {
+          if: { age: ">= 18" },
+          then: { isAdult: true },
+        },
+        {
+          if: { score: "> 80" },
+          then: { grade: "A" },
+        },
+      ],
+    });
+
+    expect(data).not.toHaveProperty("isAdult");
+    expect(data).toMatchObject({ grade: "A" });
+  });
+
+  test("evaluates strict less-than operator correctly", () => {
+    const data = dataGenerator({
+      price: 5,
+      conditions: [
+        {
+          if: { price: "< 10" },
+          then: { label: "cheap" },
+        },
+      ],
+    });
+
+    expect(data).toMatchObject({ price: 5, label: "cheap" });
+  });
+
+  test("does not apply condition when strict less-than fails", () => {
+    const data = dataGenerator({
+      price: 15,
+      conditions: [
+        {
+          if: { price: "< 10" },
+          then: { label: "cheap" },
+        },
+      ],
+    });
+
+    expect(data).not.toHaveProperty("label");
+  });
+
+  test("evaluates equality operator == correctly", () => {
+    const data = dataGenerator({
+      status: 1,
+      conditions: [
+        {
+          if: { status: "== 1" },
+          then: { statusLabel: "active" },
+        },
+      ],
+    });
+
+    expect(data).toMatchObject({ statusLabel: "active" });
+  });
+
+  test("evaluates inequality operator != correctly", () => {
+    const data = dataGenerator({
+      role: 2,
+      conditions: [
+        {
+          if: { role: "!= 1" },
+          then: { isGuest: true },
+        },
+      ],
+    });
+
+    expect(data).toMatchObject({ isGuest: true });
+  });
+
+  test("does not apply condition when != operator fails", () => {
+    const data = dataGenerator({
+      role: 1,
+      conditions: [
+        {
+          if: { role: "!= 1" },
+          then: { isGuest: true },
+        },
+      ],
+    });
+
+    expect(data).not.toHaveProperty("isGuest");
+  });
+
+  test("does not apply condition when the referenced field is missing", () => {
+    const data = dataGenerator({
+      name: "person.fullName",
+      conditions: [
+        {
+          if: { missingField: ">= 18" },
+          then: { extra: "value" },
+        },
+      ],
+    });
+
+    expect(data).not.toHaveProperty("extra");
+    expect(data).not.toHaveProperty("conditions");
+  });
+
+  test("returns an empty object when schema has no keys", () => {
+    const data = dataGenerator({});
+    expect(data).toEqual({});
+  });
+
+  test("resolves nested faker path inside an array element", () => {
+    const data = dataGenerator({
+      tags: ["fixed", "internet.domainWord"],
+    });
+
+    expect(Array.isArray((data as any).tags)).toBe(true);
+    expect((data as any).tags[0]).toBe("fixed");
+    expect(typeof (data as any).tags[1]).toBe("string");
+  });
+
+  test("returns original string value when faker path cannot be resolved", () => {
+    const data = dataGenerator({ key: "nonexistent.fakepath.xyz" });
+    expect((data as any).key).toBe("nonexistent.fakepath.xyz");
+  });
 });
